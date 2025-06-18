@@ -10,13 +10,23 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true
-    },
-    "android": {
+    },    "android": {
+      "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": false,      
+      "navigationBar": {
+        "backgroundColor": "#212121",
+        "barStyle": "light-content",
+        "visible": true
+      },
+      "statusBar": {
+        "backgroundColor": "#212121",
+        "barStyle": "light-content",
+        "hidden": false
+      }
     },
     "web": {
       "bundler": "metro",

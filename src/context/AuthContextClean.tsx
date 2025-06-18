@@ -1,10 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import { router } from 'expo-router';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
 // URL base del API - usando IP local para que funcione en dispositivos móviles
-const API_URL = 'http://192.168.1.133:3000';
+const API_URL = 'http://192.168.1.133:3000'; // Tu IP local + puerto correcto del servidor
 const REQUEST_TIMEOUT = 5000;
 
 // Definir tipos
@@ -23,6 +22,8 @@ type User = {
   gallery: string[];
   profileImage: string;
   titleMedicineImage: string;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 type AuthContextType = {
@@ -65,7 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Configurar axios con el token
           axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
           
-          // Obtener perfil del usuario
+          // Obtener perfil del usuario con timeout
           const response = await Promise.race([
             axios.get(`${API_URL}/auth/profile`),
             new Promise((_, reject) => 
@@ -73,12 +74,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             )
           ]) as any;
           
-          setUser(response.data);
+          setUser(response.data.user);
           setIsAuthenticated(true);
           console.log('AuthContext: Usuario cargado exitosamente');
         }
       } catch (error: any) {
-        console.log('AuthContext: Error cargando usuario:', error?.message || 'Error desconocido');
+        console.log('AuthContext: Error cargando usuario (posiblemente sin backend):', error?.message || 'Error desconocido');
         // Si hay algún error, eliminar el token
         await AsyncStorage.removeItem('token');
         axios.defaults.headers.common['Authorization'] = '';
@@ -97,7 +98,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(true);
       console.log(`Intentando login en: ${API_URL}/auth/login`);
       
-      // Hacer login y obtener token
+      // 1. Hacer login y obtener token
       const loginResponse = await axios.post(`${API_URL}/auth/login`, { email, password });
       const { token } = loginResponse.data;
       
@@ -107,16 +108,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Configurar axios para futuras peticiones
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       
-      // Obtener perfil del usuario con el token
+      // 2. Obtener perfil del usuario con el token
       const profileResponse = await axios.get(`${API_URL}/auth/profile`);
-      const userData = profileResponse.data;
-        setUser(userData);
-      setIsAuthenticated(true);
-      console.log('Login exitoso - Usuario autenticado:', userData.email);
+      const { user } = profileResponse.data;
       
-      // Navegar directamente al home después del login exitoso
-      console.log('Navegando a /home...');
-      router.replace('/home');
+      setUser(user);
+      setIsAuthenticated(true);
+      console.log('Login exitoso - Usuario autenticado:', user.email);
+      console.log('Estado isAuthenticated cambiado a: true');
     } catch (error) {
       console.error('Error al iniciar sesión:', error);
       throw error;
@@ -125,33 +124,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Función de registro
+  // Función de registro (actualizada para usar user + token del backend)
   const register = async (userData: RegisterData) => {
     try {
       setIsLoading(true);
       console.log(`Intentando registro en: ${API_URL}/auth/register`);
       
-      // Registrar usuario y obtener respuesta con token y usuario
+      // Registrar usuario y obtener tanto user como token directamente
       const response = await axios.post(`${API_URL}/auth/register`, userData);
-      console.log('Respuesta de registro:', response.data);
+      console.log('Usuario registrado exitosamente:', response.data);
       
-      const { user: registeredUser, token } = response.data;
+      const { user, token } = response.data;
       
       // Guardar el token
       await AsyncStorage.setItem('token', token);
       
       // Configurar axios para futuras peticiones
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;      // Establecer usuario y estado de autenticación
-      setUser(registeredUser);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
+      // Establecer usuario y estado de autenticación
+      setUser(user);
       setIsAuthenticated(true);
       
-      console.log('Registro exitoso - Usuario autenticado:', registeredUser.email);
-      console.log('Token guardado - Redirigiendo automáticamente');
-      console.log('Estado final: isAuthenticated =', true, 'isLoading =', false);
-      
-      // Navegar directamente al home después del registro exitoso
-      console.log('Navegando a /home...');
-      router.replace('/home');
+      console.log('Registro exitoso - Usuario autenticado:', user.email);
+      console.log('Token guardado - Redirigiendo a home automáticamente');
     } catch (error) {
       console.error('Error al registrarse:', error);
       throw error;
@@ -159,6 +155,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(false);
     }
   };
+
   // Función de logout
   const logout = async () => {
     try {
@@ -167,7 +164,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       axios.defaults.headers.common['Authorization'] = '';
       setUser(null);
       setIsAuthenticated(false);
-      console.log('Logout exitoso');
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
     } finally {

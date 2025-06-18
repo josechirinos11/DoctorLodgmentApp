@@ -1,6 +1,5 @@
 import React from 'react';
-import { Image, StyleSheet, View, Text, ImageSourcePropType } from 'react-native';
-import Colors from '../constants/Colors';
+import { Image, ImageSourcePropType, StyleSheet, View } from 'react-native';
 
 type LogoProps = {
   size?: 'small' | 'medium' | 'large';
@@ -8,17 +7,17 @@ type LogoProps = {
 };
 
 const Logo: React.FC<LogoProps> = ({ 
-  size = 'medium',
+  size = 'large',
   showText = true 
 }) => {
   // Importar la imagen de manera dinámica
-  const logoImage: ImageSourcePropType = require('../../assets/images/logo.jpeg');
+  const logoImage: ImageSourcePropType = require('../../assets/images/logonitido.png');
   
   // Tamaños del logo según el prop size
   const dimensions = {
     small: 60,
     medium: 100,
-    large: 150
+    large: 400
   };
   
   const logoSize = dimensions[size];
@@ -34,25 +33,23 @@ const Logo: React.FC<LogoProps> = ({
         resizeMode="contain"
       />
       
-      {showText && (
-        <Text style={styles.logoText}>Doctor Lodgment</Text>
-      )}
+  
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+
     alignItems: 'center',
+        marginVertical: 0, // evita espacio arriba y abajo
+    paddingVertical: 0,
   },
   logo: {
-    marginBottom: 10,
+    marginBottom: 0,
+   
   },
-  logoText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: Colors.primary,
-  }
+
 });
 
 export default Logo; 

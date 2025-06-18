@@ -1,36 +1,33 @@
+import { Ionicons } from '@expo/vector-icons';
+import Constants from 'expo-constants';
+import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  StyleSheet,
-  Text,
-  View,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
+  ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
-  ActivityIndicator,
-  Alert
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
-import { useAuth } from '../context/AuthContext';
-import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
 import Logo from '../components/Logo';
 import Colors from '../constants/Colors';
+import { useAuth } from '../context/AuthContext';
 
 const SignUp = () => {
-  const [name, setName] = useState('');
-  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  
-  const { register, isLoading } = useAuth();
+    const { register, isLoading } = useAuth();
 
   const handleSignUp = async () => {
     // Validar campos
-    if (!name || !lastName || !email || !password || !confirmPassword) {
+    if (!email || !password || !confirmPassword) {
       Alert.alert('Error', 'Por favor completa todos los campos');
       return;
     }
@@ -47,13 +44,16 @@ const SignUp = () => {
       return;
     }
 
+    // Validar longitud mínima de contraseña
+    if (password.length < 6) {
+      Alert.alert('Error', 'La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+
     try {
       await register({
-        name,
-        lastName,
         email,
         password,
-        phone,
       });
       // La navegación se maneja automáticamente en el layout
     } catch (error: any) {
@@ -61,195 +61,192 @@ const SignUp = () => {
       Alert.alert('Error de registro', errorMessage);
     }
   };
-
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.logoContainer}>
-          <Logo size="medium" showText={true} />
-          <Text style={styles.subtitle}>Únete a Doctor Lodgment</Text>
-        </View>
-
-        <View style={styles.formContainer}>
-          <View style={styles.inputContainer}>
-            <Ionicons name="person-outline" size={22} color={Colors.textSecondary} style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Nombre"
-              placeholderTextColor={Colors.textSecondary}
-              value={name}
-              onChangeText={setName}
-            />
+    <View style={styles.rootContainer}>      <KeyboardAvoidingView
+        style={styles.keyboardContainer}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView 
+          contentContainerStyle={styles.scrollContainer}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.logoContainer}>
+            <View style={{ marginTop: -30 }}>
+              <Logo size="large" showText={false} />
+            </View>
+            <Text style={styles.subtitle}>Únete a Doctor Lodgment</Text>
           </View>
 
-          <View style={styles.inputContainer}>
-            <Ionicons name="person-outline" size={22} color={Colors.textSecondary} style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Apellido"
-              placeholderTextColor={Colors.textSecondary}
-              value={lastName}
-              onChangeText={setLastName}
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Ionicons name="mail-outline" size={22} color={Colors.textSecondary} style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              placeholderTextColor={Colors.textSecondary}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              value={email}
-              onChangeText={setEmail}
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Ionicons name="call-outline" size={22} color={Colors.textSecondary} style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Teléfono"
-              placeholderTextColor={Colors.textSecondary}
-              keyboardType="phone-pad"
-              value={phone}
-              onChangeText={setPhone}
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Ionicons name="lock-closed-outline" size={22} color={Colors.textSecondary} style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Contraseña"
-              placeholderTextColor={Colors.textSecondary}
-              secureTextEntry={!showPassword}
-              value={password}
-              onChangeText={setPassword}
-            />
-            <TouchableOpacity
-              style={styles.passwordToggle}
-              onPress={() => setShowPassword(!showPassword)}
-            >
-              <Ionicons
-                name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                size={22}
-                color={Colors.textSecondary}
+          <View style={styles.formContainer}>
+            <View style={styles.inputContainer}>
+              <Ionicons name="mail-outline" size={22} color={Colors.textSecondary} style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Email"
+                placeholderTextColor={Colors.textSecondary}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                value={email}
+                onChangeText={setEmail}
               />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Ionicons name="lock-closed-outline" size={22} color={Colors.textSecondary} style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Contraseña"
+                placeholderTextColor={Colors.textSecondary}
+                secureTextEntry={!showPassword}
+                value={password}
+                onChangeText={setPassword}
+              />
+              <TouchableOpacity
+                style={styles.passwordToggle}
+                onPress={() => setShowPassword(!showPassword)}
+              >
+                <Ionicons
+                  name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                  size={22}
+                  color={Colors.textSecondary}
+                />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Ionicons name="lock-closed-outline" size={22} color={Colors.textSecondary} style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Confirmar contraseña"
+                placeholderTextColor={Colors.textSecondary}
+                secureTextEntry={!showPassword}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+              />
+            </View>
+
+            <TouchableOpacity
+              style={styles.signupButton}
+              onPress={handleSignUp}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.signupButtonText}>Registrarse</Text>
+              )}
             </TouchableOpacity>
-          </View>
 
-          <View style={styles.inputContainer}>
-            <Ionicons name="lock-closed-outline" size={22} color={Colors.textSecondary} style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Confirmar contraseña"
-              placeholderTextColor={Colors.textSecondary}
-              secureTextEntry={!showPassword}
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-            />
+            <View style={styles.loginContainer}>
+              <Text style={styles.loginText}>¿Ya tienes una cuenta? </Text>
+              <TouchableOpacity onPress={() => router.push("/login")}>
+                <Text style={styles.loginLink}>Inicia sesión</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-
-          <TouchableOpacity
-            style={styles.signupButton}
-            onPress={handleSignUp}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.signupButtonText}>Registrarse</Text>
-            )}
-          </TouchableOpacity>
-
-          <View style={styles.loginContainer}>
-            <Text style={styles.loginText}>¿Ya tienes una cuenta? </Text>
-            <TouchableOpacity onPress={() => {
-              // @ts-ignore - Ignoring type check for router.push since expo-router types are problematic
-              router.push("login");
-            }}>
-              <Text style={styles.loginLink}>Inicia sesión</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+      
+      {/* View absoluto inferior para cubrir la zona de navegación */}
+      <View style={styles.bottomOverlay} />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 20,
+  rootContainer: {
+    flex: 1,
     backgroundColor: Colors.background,
+  },
+  keyboardContainer: {
+    flex: 1,
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    paddingHorizontal: 24,
+    paddingTop: Platform.OS === 'android' ? Constants.statusBarHeight + 20 : 60,
+    paddingBottom: Platform.OS === 'android' ? 100 : 20, // Espacio extra para zona de navegación
   },
   logoContainer: {
     alignItems: 'center',
-    marginVertical: 30,
+    marginBottom: 40,
   },
   subtitle: {
+    marginTop: 0,
     fontSize: 16,
     color: Colors.textSecondary,
     textAlign: 'center',
-    marginTop: 10,
+    lineHeight: 24,
   },
   formContainer: {
-    width: '100%',
+    marginTop: -30,
+    flex: 1,
   },
   inputContainer: {
     flexDirection: 'row',
-    borderWidth: 1,
-    borderColor: Colors.divider,
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    marginBottom: 15,
     alignItems: 'center',
     backgroundColor: Colors.surface,
+    borderRadius: 12,
+    marginBottom: 16,
+    paddingHorizontal: 16,
+    height: 56,
+    borderWidth: 1,
+    borderColor: Colors.divider,
   },
   inputIcon: {
-    marginRight: 10,
+    marginRight: 12,
   },
   input: {
     flex: 1,
-    height: 50,
-    color: Colors.text,
     fontSize: 16,
+    color: Colors.text,
   },
   passwordToggle: {
-    padding: 10,
+    padding: 4,
   },
   signupButton: {
     backgroundColor: Colors.primary,
-    borderRadius: 10,
-    height: 50,
-    alignItems: 'center',
+    borderRadius: 12,
+    height: 56,
     justifyContent: 'center',
-    marginTop: 10,
-    marginBottom: 20,
+    alignItems: 'center',
+    marginTop: 24,
+    shadowColor: Colors.primary,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
   signupButtonText: {
     color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 16,
+    fontWeight: '600',
   },
   loginContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: 20,
+    alignItems: 'center',
+    marginTop: 32,
   },
   loginText: {
-    color: Colors.textSecondary,
     fontSize: 14,
+    color: Colors.textSecondary,
   },
   loginLink: {
-    color: Colors.primary,
     fontSize: 14,
-    fontWeight: 'bold',
+    color: Colors.primary,
+    fontWeight: '600',
+  },  bottomOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: Platform.OS === 'android' ? 45 : 0, // Franja más delgada para cubrir zona de navegación
+    backgroundColor: '#212121', // Negro para coincidir con la barra de navegación
   },
 });
 
-export default SignUp; 
+export default SignUp;

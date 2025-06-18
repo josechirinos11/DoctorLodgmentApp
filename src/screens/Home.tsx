@@ -1,567 +1,541 @@
-import React, { useState, useEffect } from 'react';
+import { Ionicons } from '@expo/vector-icons';
+import * as Location from 'expo-location';
+import { router } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import React, { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
+  Alert,
+  Dimensions,
+  FlatList,
+  Platform,
+  SafeAreaView,
   StyleSheet,
   Text,
-  View,
-  FlatList,
-  TouchableOpacity,
-  Image,
   TextInput,
-  ActivityIndicator,
-  Dimensions,
-  Alert,
-  Platform
+  TouchableOpacity,
+  View
 } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
-import * as Location from 'expo-location';
-import { useAuth } from '../context/AuthContext';
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import axios from 'axios';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Colors from '../constants/Colors';
+import { useAuth } from '../context/AuthContext';
 
-// Ancho de pantalla para cálculos de tamaño
-const windowWidth = Dimensions.get('window').width;
+const { width, height } = Dimensions.get('window');
 
-// URL base del API
-const API_URL = 'http://10.0.2.2:3000';
-
-// Tipos para los alojamientos
-type Lodgment = {
-  _id: string;
-  title: string;
-  description: string;
-  price: number;
-  location: {
-    latitude: number;
-    longitude: number;
-    address: string;
-  };
-  images: string[];
-  rating: number;
-  user: {
-    _id: string;
-    name: string;
-    profileImage: string;
-  };
+type LocationData = {
+  latitude: number;
+  longitude: number;
+  latitudeDelta: number;
+  longitudeDelta: number;
 };
 
-// Datos temporales para simular alojamientos (reemplazar con API real)
-const MOCK_LODGMENTS: Lodgment[] = [
-  {
-    _id: '1',
-    title: 'Apartamento céntrico para médicos',
-    description: 'Apartamento moderno ideal para médicos que necesitan alojamiento durante su rotación. Acceso rápido a hospitales principales.',
-    price: 120,
-    location: {
-      latitude: 43.2632,
-      longitude: -2.9349,
-      address: 'Calle Principal 123, Bilbao'
-    },
-    images: [
-      'https://images.unsplash.com/photo-1566195992011-5f6b21e539aa?q=80&w=3087&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1594540637720-9b14714212e4?q=80&w=3087&auto=format&fit=crop',
-    ],
-    rating: 4.8,
-    user: {
-      _id: '101',
-      name: 'Ana Martínez',
-      profileImage: 'https://randomuser.me/api/portraits/women/44.jpg'
-    }
-  },
-  {
-    _id: '2',
-    title: 'Estudio cerca del Hospital Universitario',
-    description: 'Acogedor estudio a 5 minutos a pie del Hospital Universitario. Ideal para residentes médicos.',
-    price: 85,
-    location: {
-      latitude: 43.2682,
-      longitude: -2.9389,
-      address: 'Avenida Hospital 456, Bilbao'
-    },
-    images: [
-      'https://images.unsplash.com/photo-1630699144867-37acec97df5a?q=80&w=3000&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1586105251261-72a756497a11?q=80&w=3087&auto=format&fit=crop',
-    ],
-    rating: 4.5,
-    user: {
-      _id: '102',
-      name: 'Carlos Ruiz',
-      profileImage: 'https://randomuser.me/api/portraits/men/32.jpg'
-    }
-  },
-  {
-    _id: '3',
-    title: 'Apartamento premium para profesionales médicos',
-    description: 'Lujoso apartamento con todas las comodidades para profesionales de la salud. Cerca de las principales clínicas.',
-    price: 150,
-    location: {
-      latitude: 43.2602,
-      longitude: -2.9309,
-      address: 'Gran Vía 789, Bilbao'
-    },
-    images: [
-      'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=3000&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=2940&auto=format&fit=crop',
-    ],
-    rating: 4.9,
-    user: {
-      _id: '103',
-      name: 'María López',
-      profileImage: 'https://randomuser.me/api/portraits/women/68.jpg'
-    }
-  },
-];
-
 const Home = () => {
-  const { user } = useAuth();
-  const router = useRouter();
-  
-  const [isLoading, setIsLoading] = useState(false);
-  const [lodgments, setLodgments] = useState<Lodgment[]>(MOCK_LODGMENTS);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showMap, setShowMap] = useState(false);
-  const [location, setLocation] = useState<Location.LocationObject | null>(null);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const { user, logout } = useAuth();
+  const [location, setLocation] = useState<LocationData | null>(null);
+  const [isLoadingLocation, setIsLoadingLocation] = useState(true);  const [isMenuExpanded, setIsMenuExpanded] = useState(false);
+  const [searchText, setSearchText] = useState('');
+  const [filteredZones, setFilteredZones] = useState<Array<{id: string, name: string, country: string}>>([]);
 
-  // Filtrar alojamientos basado en la búsqueda
-  const filteredLodgments = lodgments.filter(
-    (lodgment) =>
-      lodgment.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      lodgment.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      lodgment.location.address.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Lista de zonas disponibles
+  const availableZones = [
+    { id: '1', name: 'Valencia', country: 'España' },
+    { id: '2', name: 'Valencia', country: 'Venezuela' },
+    { id: '3', name: 'Madrid', country: 'España' },
+    { id: '4', name: 'Barcelona', country: 'España' },
+    { id: '5', name: 'Caracas', country: 'Venezuela' },
+    { id: '6', name: 'Maracaibo', country: 'Venezuela' },
+    { id: '7', name: 'Sevilla', country: 'España' },
+    { id: '8', name: 'Bilbao', country: 'España' },
+  ];
 
-  // Obtener ubicación del usuario
+  const insets = useSafeAreaInsets();  useEffect(() => {
+    getCurrentLocation();
+  }, []);
+
   useEffect(() => {
-    (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
+    // Filtrar zonas según el texto de búsqueda
+    if (searchText.trim() === '') {
+      setFilteredZones([]);
+    } else {
+      const filtered = availableZones.filter(zone =>
+        zone.name.toLowerCase().includes(searchText.toLowerCase()) ||
+        zone.country.toLowerCase().includes(searchText.toLowerCase())
+      );
+      setFilteredZones(filtered);
+    }
+  }, [searchText]);
+
+  const getCurrentLocation = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        setErrorMsg('Se requiere permiso para acceder a la ubicación');
+        Alert.alert(
+          'Permisos de ubicación',
+          'La aplicación necesita acceso a la ubicación para mostrar el mapa.'
+        );
+        setIsLoadingLocation(false);
         return;
       }
 
-      try {
-        const location = await Location.getCurrentPositionAsync({});
-        setLocation(location);
-      } catch (error) {
-        setErrorMsg('No se pudo determinar tu ubicación');
-        console.error(error);
-      }
-    })();
-  }, []);
+      const currentLocation = await Location.getCurrentPositionAsync({});
+      setLocation({
+        latitude: currentLocation.coords.latitude,
+        longitude: currentLocation.coords.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      });
+    } catch (error) {
+      console.error('Error obteniendo ubicación:', error);
+      Alert.alert('Error', 'No se pudo obtener la ubicación actual');
+    } finally {
+      setIsLoadingLocation(false);
+    }
+  };
+  const handleUser = () => {
+    router.push('/user-profile');
+  };
 
-  // En una implementación real, aquí cargaríamos los alojamientos desde la API
-  // useEffect(() => {
-  //   const fetchLodgments = async () => {
-  //     setIsLoading(true);
-  //     try {
-  //       const response = await axios.get(`${API_URL}/lodgments`);
-  //       setLodgments(response.data);
-  //     } catch (error) {
-  //       console.error('Error fetching lodgments:', error);
-  //       Alert.alert('Error', 'No se pudieron cargar los alojamientos');
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
-  //   };
-  //
-  //   fetchLodgments();
-  // }, []);
+  const handleSettings = () => {
+    router.push('/settings');
+  };
 
-  // Renderizar cada item de alojamiento
-  const renderLodgmentItem = ({ item }: { item: Lodgment }) => (
-    <TouchableOpacity 
-      style={styles.lodgmentCard}
-      onPress={() => Alert.alert('Ver detalles', `Detalles de: ${item.title}`)}
-    >
-      {/* Imagen principal */}
-      <View style={styles.imageContainer}>
-        <Image 
-          source={{ uri: item.images[0] }} 
-          style={styles.lodgmentImage} 
-          resizeMode="cover"
-        />
-        <View style={styles.priceTag}>
-          <Text style={styles.priceText}>{item.price}€/noche</Text>
-        </View>
+  const handleMessages = () => {
+    Alert.alert('Mensajes', 'Función de mensajes en desarrollo');
+  };
 
-        <TouchableOpacity style={styles.favoriteButton}>
-          <Ionicons name="heart-outline" size={24} color="white" />
-        </TouchableOpacity>
-      </View>
+  const handleContacts = () => {
+    Alert.alert('Contactos', 'Función de contactos en desarrollo');
+  };
+  const handleConferences = () => {
+    Alert.alert('Congresos', 'Función de congresos y reuniones científicas en desarrollo');
+  };  const handleFilter = () => {
+    setIsMenuExpanded(!isMenuExpanded);
+    
+    // Limpiar búsqueda al cerrar
+    if (isMenuExpanded) {
+      setSearchText('');
+    }
+  };
 
-      {/* Información del alojamiento */}
-      <View style={styles.lodgmentInfo}>
-        <View style={styles.infoHeader}>
-          <Text style={styles.lodgmentTitle} numberOfLines={1}>{item.title}</Text>
-          <View style={styles.ratingContainer}>
-            <Ionicons name="star" size={16} color="#FFD700" />
-            <Text style={styles.ratingText}>{item.rating}</Text>
+  const handleZoneSelect = (zone: {id: string, name: string, country: string}) => {
+    Alert.alert(
+      'Zona seleccionada',
+      `${zone.name}, ${zone.country}`,
+      [
+        { text: 'Buscar aquí', onPress: () => {
+          console.log('Buscar en:', zone);
+          // Aquí puedes agregar la lógica para cambiar la ubicación del mapa
+          setSearchText('');
+          setIsMenuExpanded(false);
+        }},
+        { text: 'Cancelar', style: 'cancel' }
+      ]
+    );
+  };return (
+    <SafeAreaView style={styles.container}>
+      <StatusBar style="light" backgroundColor={Colors.secondary} />      {/* Menú flotante - contenedor de iconos fijo */}
+      <View style={styles.floatingIconsContainer}>
+          {/* Icono de filtro */}
+          <TouchableOpacity style={styles.floatingMenuItem} onPress={handleFilter}>
+            <View style={styles.filterIconBackground}>
+              <Ionicons 
+                name={isMenuExpanded ? "close-outline" : "filter-outline"} 
+                size={24} 
+                color={Colors.textLight} 
+              />
+            </View>
+          </TouchableOpacity>          {/* Icono de usuario */}
+          <TouchableOpacity style={styles.floatingMenuItem} onPress={handleUser}>
+            <View style={styles.userIconBackground}>
+              <Ionicons name="person-outline" size={24} color={Colors.textLight} />
+            </View>
+          </TouchableOpacity>
+
+          {/* Icono de configuraciones */}
+          <TouchableOpacity style={styles.floatingMenuItem} onPress={handleSettings}>
+            <View style={styles.settingsIconBackground}>
+              <Ionicons name="settings-outline" size={24} color={Colors.textLight} />
+            </View>
+          </TouchableOpacity>        </View>      {/* Área expandible separada */}
+      {isMenuExpanded && (
+        <View style={styles.expandedMenuContainer}>
+          <View style={styles.expandedContent}>
+            {/* Input de búsqueda */}
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Escribe una ciudad o país..."
+              placeholderTextColor={Colors.textSecondary}
+              value={searchText}
+              onChangeText={setSearchText}
+              autoCapitalize="words"
+              autoCorrect={false}
+            />
+
+            {/* Lista de zonas filtradas */}
+            {filteredZones.length > 0 && (
+              <FlatList
+                data={filteredZones}
+                keyExtractor={(item) => item.id}
+                style={styles.zonesList}
+                showsVerticalScrollIndicator={false}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.zoneItem}
+                    onPress={() => handleZoneSelect(item)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.zoneItemContent}>
+                      <Text style={styles.zoneName}>{item.name}</Text>
+                      <Text style={styles.zoneCountry}>{item.country}</Text>
+                    </View>
+                    <Ionicons name="location-outline" size={16} color={Colors.primary} />
+                  </TouchableOpacity>
+                )}
+              />
+            )}
+
+            {/* Mensaje cuando no hay resultados */}
+            {searchText.trim() !== '' && filteredZones.length === 0 && (
+              <View style={styles.noResultsContainer}>
+                <Text style={styles.noResultsText}>No se encontraron zonas</Text>
+              </View>
+            )}          </View>        </View>
+      )}
+
+      {/* Mapa principal - pantalla completa */}
+      <View style={styles.mapContainer}>
+        {isLoadingLocation ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={Colors.primary} />
+            <Text style={styles.loadingText}>Obteniendo ubicación...</Text>
           </View>
-        </View>
-
-        <Text style={styles.locationText} numberOfLines={1}>
-          <Ionicons name="location-outline" size={14} color={Colors.textSecondary} /> {item.location.address}
-        </Text>
-
-        <Text style={styles.descriptionText} numberOfLines={2}>{item.description}</Text>
-        
-        {/* Host info */}
-        <View style={styles.hostContainer}>
-          <Image 
-            source={{ uri: item.user.profileImage }} 
-            style={styles.hostImage} 
-          />
-          <Text style={styles.hostName}>Anfitrión: {item.user.name}</Text>
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
-
-  // Header component para la FlatList
-  const ListHeaderComponent = () => (
-    <>
-      <View style={styles.header}>
-        <Text style={styles.welcomeText}>
-          Hola, {user?.name || 'Doctor'}
-        </Text>
-        <Text style={styles.subtitleText}>
-          Encuentra el mejor alojamiento para tu estancia médica
-        </Text>
-      </View>
-
-      <View style={styles.searchContainer}>
-        <Ionicons name="search-outline" size={20} color={Colors.textSecondary} style={styles.searchIcon} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Buscar por ubicación, hospital, etc."
-          placeholderTextColor={Colors.textSecondary}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-      </View>
-
-      <View style={styles.filterOptions}>
-        <TouchableOpacity style={styles.filterButton}>
-          <Ionicons name="filter-outline" size={18} color={Colors.primary} />
-          <Text style={styles.filterText}>Filtros</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={styles.mapToggleButton}
-          onPress={() => setShowMap(!showMap)}
-        >
-          <Ionicons name={showMap ? "list-outline" : "map-outline"} size={18} color={Colors.primary} />
-          <Text style={styles.mapToggleText}>{showMap ? "Ver lista" : "Ver mapa"}</Text>
-        </TouchableOpacity>
-      </View>
-
-      {showMap && (
-        <View style={styles.mapContainer}>
+        ) : location ? (
           <MapView
-            provider={PROVIDER_GOOGLE}
             style={styles.map}
-            initialRegion={{
-              latitude: location?.coords.latitude || 43.2632,
-              longitude: location?.coords.longitude || -2.9349,
-              latitudeDelta: 0.01,
-              longitudeDelta: 0.01,
-            }}
+            provider={PROVIDER_GOOGLE}
+            initialRegion={location}
+            showsUserLocation={true}
+            showsMyLocationButton={true}
+            zoomEnabled={true}
+            scrollEnabled={true}
           >
-            {filteredLodgments.map((lodgment) => (
-              <Marker
-                key={lodgment._id}
-                coordinate={{
-                  latitude: lodgment.location.latitude,
-                  longitude: lodgment.location.longitude,
-                }}
-                title={lodgment.title}
-                description={`${lodgment.price}€/noche`}
-              >
-                <View style={styles.markerContainer}>
-                  <Text style={styles.markerText}>{lodgment.price}€</Text>
-                </View>
-              </Marker>
-            ))}
+            <Marker
+              coordinate={{
+                latitude: location.latitude,
+                longitude: location.longitude,
+              }}
+              title="Tu ubicación"
+              description="Estás aquí"
+            />
           </MapView>
-        </View>
-      )}
-
-      {!showMap && (
-        <View style={styles.listHeader}>
-          <Text style={styles.sectionTitle}>Alojamientos disponibles</Text>
-          <Text style={styles.resultCount}>{filteredLodgments.length} resultados</Text>
-        </View>
-      )}
-    </>
-  );
-
-  return (
-    <View style={styles.container}>
-      <StatusBar style="auto" />
-      
-      {isLoading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={Colors.primary} />
-          <Text style={styles.loadingText}>Cargando alojamientos...</Text>
-        </View>
-      ) : (
-        <FlatList
-          data={showMap ? [] : filteredLodgments}
-          renderItem={renderLodgmentItem}
-          keyExtractor={(item) => item._id}
-          ListHeaderComponent={ListHeaderComponent}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.listContent}
-        />
-      )}
-      
-      {/* Botón flotante para añadir nuevo alojamiento (solo para anfitriones) */}
-      {user?.role === 'host' && (
-        <TouchableOpacity 
-          style={styles.addButton}
-          onPress={() => Alert.alert('Nuevo alojamiento', 'Función para añadir un nuevo alojamiento')}
+        ) : (
+          <View style={styles.errorContainer}>
+            <Ionicons name="location-outline" size={48} color={Colors.textSecondary} />
+            <Text style={styles.errorText}>No se pudo obtener la ubicación</Text>
+            <TouchableOpacity style={styles.retryButton} onPress={getCurrentLocation}>
+              <Text style={styles.retryButtonText}>Intentar de nuevo</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>      {/* Menu inferior */}
+      <View style={[
+        styles.bottomMenu, 
+        { 
+          paddingBottom: Math.max(insets.bottom + (Platform.OS === 'android' ? 8 : 0), 16) 
+        }
+      ]}>        <TouchableOpacity 
+          style={styles.menuItem} 
+          onPress={handleMessages}
+          activeOpacity={0.7}
         >
-          <Ionicons name="add" size={24} color="white" />
+          <View style={styles.iconContainer}>
+            <Ionicons name="chatbubbles-outline" size={32} color={Colors.primary} />
+          </View>
         </TouchableOpacity>
-      )}
-    </View>
+
+        <TouchableOpacity 
+          style={styles.menuItem} 
+          onPress={handleContacts}
+          activeOpacity={0.7}
+        >
+          <View style={styles.iconContainer}>
+            <Ionicons name="people-outline" size={32} color={Colors.primary} />
+          </View>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.menuItem} 
+          onPress={handleConferences}
+          activeOpacity={0.7}
+        >
+          <View style={styles.iconContainer}>
+            <Ionicons name="school-outline" size={32} color={Colors.primary} />
+          </View>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
+const styles = StyleSheet.create({  container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.secondary, // Fondo negro para combinar con la navegación
+  },  floatingMenu: {
+    position: 'absolute',
+    top: 50,
+    zIndex: 1000,
+    backgroundColor: 'rgba(33, 33, 33, 0.9)',
+    borderRadius: 25,
+    elevation: 8,
+    shadowColor: Colors.secondary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 6.27,
+  },
+  // Contenedor fijo para los iconos
+  floatingIconsContainer: {
+    position: 'absolute',
+    top: 50,
+    right: 16,
+    zIndex: 1001, // Mayor que el área expandida
+    backgroundColor: 'rgba(33, 33, 33, 0.9)',
+    borderRadius: 25,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    elevation: 8,
+    shadowColor: Colors.secondary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 6.27,
+    flexDirection: 'column',
+    alignItems: 'center',
+  },  // Contenedor para el área expandida
+  expandedMenuContainer: {
+    position: 'absolute',
+    top: 50, // Misma altura que el menú de iconos
+    left: 16,
+    right: 88, // Más espacio a la derecha para separación (16px extra)
+    zIndex: 1000,
+    backgroundColor: 'rgba(33, 33, 33, 0.9)',
+    borderRadius: 25,
+    paddingVertical: 8, // Reducido de 16 a 8
+    paddingHorizontal: 8, // Reducido de 16 a 8
+    maxHeight: 400,
+    elevation: 8,
+    shadowColor: Colors.secondary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 6.27,
+  },floatingMenuCollapsed: {
+    right: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    width: 56, // Ancho fijo para el menú colapsado
+  },  floatingMenuExpanded: {
+    left: 16, // Espacio a la izquierda
+    right: 16, // Espacio a la derecha
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    maxHeight: 400, // Altura máxima para evitar que se salga de pantalla
+  },mainIconsContainer: {
+    flexDirection: 'column',
+    alignItems: 'center',
+  },  mainIconsContainerExpanded: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    position: 'absolute',
+    right: 16, // Alineado con el borde derecho del menú expandido
+    top: 16,   // Alineado con el padding superior
+    zIndex: 10,
+  },  expandedContent: {
+    flex: 1,
+    paddingTop: 0, // Sin padding superior
+    paddingRight: 0, // Sin padding derecho ya que está en contenedor separado
+    paddingLeft: 0, // Sin padding izquierdo
+  },
+  floatingMenuItem: {
+    marginVertical: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },filterIconBackground: {
+    width: 40,
+    height: 40,
+    backgroundColor: Colors.primary,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+  },
+  userIconBackground: {
+    width: 40,
+    height: 40,
+    backgroundColor: Colors.secondary,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+  },
+  settingsIconBackground: {
+    width: 40,
+    height: 40,
+    backgroundColor: Colors.accent,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,    shadowRadius: 1.41,
+  },
+  mapContainer: {
+    flex: 1,
+    borderRadius: 0,
+    overflow: 'hidden',
+    margin: 0,
+  },
+  map: {
+    flex: 1,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: Colors.surface,
   },
   loadingText: {
-    marginTop: 10,
+    marginTop: 12,
     fontSize: 16,
     color: Colors.textSecondary,
   },
-  header: {
-    padding: 15,
-    paddingTop: Platform.OS === 'ios' ? 50 : 20,
-  },
-  welcomeText: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: Colors.text,
-  },
-  subtitleText: {
-    fontSize: 16,
-    color: Colors.textSecondary,
-    marginTop: 5,
-  },
-  searchContainer: {
-    flexDirection: 'row',
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: Colors.surface,
-    marginHorizontal: 15,
-    marginVertical: 10,
-    borderRadius: 20,
-    paddingHorizontal: 15,
-    height: 50,
-    borderWidth: 1,
-    borderColor: Colors.divider,
+    padding: 20,
   },
-  searchIcon: {
-    marginRight: 10,
-  },
-  searchInput: {
-    flex: 1,
+  errorText: {
     fontSize: 16,
-    color: Colors.text,
-  },
-  filterOptions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 15,
-    marginBottom: 15,
-  },
-  filterButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#E8F5E9', // Color de fondo verde claro para coincidir con el logo
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  filterText: {
-    marginLeft: 5,
-    color: Colors.primary,
-    fontWeight: '500',
-  },
-  mapToggleButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#E8F5E9', // Color de fondo verde claro para coincidir con el logo
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  mapToggleText: {
-    marginLeft: 5,
-    color: Colors.primary,
-    fontWeight: '500',
-  },
-  mapContainer: {
-    height: 300,
-    marginHorizontal: 15,
-    marginBottom: 15,
-    borderRadius: 10,
-    overflow: 'hidden',
-  },
-  map: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  markerContainer: {
-    backgroundColor: Colors.primary,
-    borderRadius: 20,
-    padding: 5,
-    paddingHorizontal: 10,
-    borderWidth: 1,
-    borderColor: 'white',
-  },
-  markerText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 12,
-  },
-  listHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginHorizontal: 15,
-    marginBottom: 10,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: Colors.text,
-  },
-  resultCount: {
-    fontSize: 14,
     color: Colors.textSecondary,
+    textAlign: 'center',
+    marginVertical: 12,
   },
-  listContent: {
-    paddingBottom: 20,
+  retryButton: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+    marginTop: 8,
   },
-  lodgmentCard: {
-    marginVertical: 10,
-    marginHorizontal: 15,
+  retryButtonText: {
+    color: Colors.textLight,
+    fontSize: 16,
+    fontWeight: '500',
+  },  bottomMenu: {
+    flexDirection: 'row',
     backgroundColor: Colors.background,
-    borderRadius: 15,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    justifyContent: 'space-around',
+    borderTopWidth: 2,
+    borderTopColor: Colors.primary,
+    elevation: 12,
     shadowColor: Colors.secondary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 2,
-    overflow: 'hidden',
-  },
-  imageContainer: {
-    position: 'relative',
-  },
-  lodgmentImage: {
-    width: '100%',
-    height: 200,
-    borderTopLeftRadius: 15,
-    borderTopRightRadius: 15,
-  },
-  priceTag: {
-    position: 'absolute',
-    bottom: 10,
-    left: 10,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 20,
-  },
-  priceText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 14,
-  },
-  favoriteButton: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    borderRadius: 20,
-    padding: 8,
-  },
-  lodgmentInfo: {
-    padding: 15,
-  },
-  infoHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 5,
-  },
-  lodgmentTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: Colors.text,
-    width: '80%',
-  },
-  ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  ratingText: {
-    marginLeft: 3,
-    fontSize: 14,
-    color: Colors.text,
-    fontWeight: '500',
-  },
-  locationText: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    marginBottom: 5,
-  },
-  descriptionText: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    marginBottom: 10,
-  },
-  hostContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  hostImage: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    marginRight: 10,
-  },
-  hostName: {
-    fontSize: 14,
-    color: Colors.text,
-  },
-  addButton: {
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
-    backgroundColor: Colors.primary,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5.46,
+  },  menuItem: {
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 5,
-    shadowColor: Colors.secondary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    minWidth: 60,
+    backgroundColor: Colors.surface,
+    elevation: 2,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+  },
+  iconContainer: {
+    width: 48,
+    height: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(139, 195, 74, 0.15)', // Verde primario con más transparencia
+    borderRadius: 24,
+    marginBottom: 0,
+  },  menuText: {
+    fontSize: 11,
+    color: Colors.secondary,
+    marginTop: 4,
+    fontWeight: '600',
+    textAlign: 'center',
+  },  // Estilos para el área de búsqueda
+  searchInput: {
+    backgroundColor: Colors.background,
+    borderRadius: 12,
+    paddingHorizontal: 12, // Reducido de 16 a 12
+    paddingVertical: 10, // Reducido de 12 a 10
+    marginTop: 4, // Reducido margen superior
+    marginBottom: 8, // Reducido margen inferior
+    marginHorizontal: 0, // Sin margen horizontal para ocupar todo el ancho
+    fontSize: 16,
+    color: Colors.text,
+    borderWidth: 1,
+    borderColor: Colors.divider,
+    textAlign: 'left',
+  },zonesList: {
+    maxHeight: 250, // Altura un poco más grande
+    marginTop: 4,
+  },
+  zoneItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 8, // Padding vertical más pequeño para hacerlos más delgados
+    paddingHorizontal: 12, // Padding horizontal más pequeño
+    marginVertical: 1, // Margen vertical más pequeño
+    marginHorizontal: 0, // Sin margen horizontal para ocupar todo el ancho
+    backgroundColor: 'rgba(255, 255, 255, 0.08)', // Fondo más sutil
+    borderRadius: 6, // Bordes menos redondeados
+    minHeight: 44, // Altura mínima más pequeña
+  },
+  zoneItemContent: {
+    flex: 1,
+    paddingRight: 8, // Espacio entre el texto y el icono
+  },
+  zoneName: {
+    color: Colors.textLight,
+    fontSize: 15, // Fuente un poco más pequeña
+    fontWeight: '500', // Peso de fuente más ligero
+    lineHeight: 18,
+  },
+  zoneCountry: {
+    color: Colors.textSecondary,
+    fontSize: 13, // Fuente más pequeña
+    marginTop: 1,
+    lineHeight: 16,
+  },
+  noResultsContainer: {
+    paddingVertical: 20,
+    alignItems: 'center',
+  },
+  noResultsText: {
+    color: Colors.textSecondary,
+    fontSize: 14,
+    fontStyle: 'italic',
   },
 });
 
-export default Home; 
+export default Home;

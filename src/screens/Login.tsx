@@ -1,27 +1,26 @@
-import React, { useState } from 'react';
-import {
-  StyleSheet,
-  Text,
-  View,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-  ActivityIndicator,
-  Alert
-} from 'react-native';
-import { useAuth } from '../context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import React, { useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
+} from 'react-native';
 import Logo from '../components/Logo';
 import Colors from '../constants/Colors';
+import { useAuth } from '../context/AuthContext'; // Volviendo al original
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const { login, isLoading } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);  const { login, isLoading } = useAuth();
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -39,98 +38,113 @@ const Login = () => {
       );
     }
   };
-
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.logoContainer}>
-          <Logo size="large" showText={true} />
-          <Text style={styles.subtitle}>Encuentra el mejor alojamiento médico</Text>
-        </View>
-
-        <View style={styles.formContainer}>
-          <View style={styles.inputContainer}>
-            <Ionicons name="mail-outline" size={22} color={Colors.textSecondary} style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              placeholderTextColor={Colors.textSecondary}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              value={email}
-              onChangeText={setEmail}
-            />
+    <View style={styles.rootContainer}>      <KeyboardAvoidingView
+        style={styles.keyboardContainer}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={0}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContainer}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.logoContainer}>
+            <Logo size="large" showText={true} />
           </View>
 
-          <View style={styles.inputContainer}>
-            <Ionicons name="lock-closed-outline" size={22} color={Colors.textSecondary} style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Contraseña"
-              placeholderTextColor={Colors.textSecondary}
-              secureTextEntry={!showPassword}
-              value={password}
-              onChangeText={setPassword}
-            />
-            <TouchableOpacity
-              style={styles.passwordToggle}
-              onPress={() => setShowPassword(!showPassword)}
-            >
-              <Ionicons
-                name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                size={22}
-                color={Colors.textSecondary}
+          <View style={styles.formContainer}>
+            <View style={styles.inputContainer}>
+              <Ionicons name="mail-outline" size={22} color={Colors.textSecondary} style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Email"
+                placeholderTextColor={Colors.textSecondary}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                value={email}
+                onChangeText={setEmail}
               />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Ionicons name="lock-closed-outline" size={22} color={Colors.textSecondary} style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Contraseña"
+                placeholderTextColor={Colors.textSecondary}
+                secureTextEntry={!showPassword}
+                value={password}
+                onChangeText={setPassword}
+              />
+              <TouchableOpacity
+                style={styles.passwordToggle}
+                onPress={() => setShowPassword(!showPassword)}
+              >
+                <Ionicons
+                  name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                  size={22}
+                  color={Colors.textSecondary}
+                />
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity
+              style={styles.forgotPassword}
+              onPress={() => Alert.alert('Recuperar contraseña', 'Función disponible próximamente')}
+            >
+              <Text style={styles.forgotPasswordText}>¿Olvidaste tu contraseña?</Text>
             </TouchableOpacity>
-          </View>
 
-          <TouchableOpacity
-            style={styles.forgotPassword}
-            onPress={() => Alert.alert('Recuperar contraseña', 'Función disponible próximamente')}
-          >
-            <Text style={styles.forgotPasswordText}>¿Olvidaste tu contraseña?</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.loginButton}
-            onPress={handleLogin}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.loginButtonText}>Iniciar Sesión</Text>
-            )}
-          </TouchableOpacity>
-
-          <View style={styles.signupContainer}>
-            <Text style={styles.signupText}>¿No tienes una cuenta? </Text>
-            <TouchableOpacity onPress={() => {
-              // @ts-ignore - Ignoring type check for router.push since expo-router types are problematic
-              router.push("signup");
-            }}>
-              <Text style={styles.signupLink}>Regístrate</Text>
+            <TouchableOpacity
+              style={styles.loginButton}
+              onPress={handleLogin}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.loginButtonText}>Iniciar Sesión</Text>
+              )}
             </TouchableOpacity>
+
+            <View style={styles.signupContainer}>
+              <Text style={styles.signupText}>¿No tienes una cuenta? </Text>
+              <TouchableOpacity onPress={() => {
+                // @ts-ignore - Ignoring type check for router.push since expo-router types are problematic
+                router.push("signup");
+              }}>
+                <Text style={styles.signupLink}>Regístrate</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+      
+      {/* View absoluto inferior para cubrir la zona de navegación */}
+      <View style={styles.bottomOverlay} />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  rootContainer: {
     flex: 1,
-    padding: 20,
     backgroundColor: Colors.background,
+  },
+  keyboardContainer: {
+    flex: 1,
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    padding: 20,
+    paddingTop: Platform.OS === 'android' ? 60 : 20,
+    paddingBottom: Platform.OS === 'android' ? 100 : 20, // Espacio extra para zona de navegación
     justifyContent: 'center',
   },
   logoContainer: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 0,
   },
   subtitle: {
     fontSize: 16,
@@ -196,6 +210,13 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     fontSize: 14,
     fontWeight: 'bold',
+  },  bottomOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: Platform.OS === 'android' ? 45 : 0, // Franja más delgada para cubrir zona de navegación
+    backgroundColor: '#212121', // Negro para coincidir con la barra de navegación
   },
 });
 
