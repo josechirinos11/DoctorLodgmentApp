@@ -54,7 +54,6 @@ const Home = () => {
 
   const insets = useSafeAreaInsets();
   useEffect(() => {
-
     getCurrentLocation();
   }, []);
 
@@ -238,53 +237,106 @@ const Home = () => {
             )}{" "}
           </View>{" "}
         </View>
-      )}
-      {/* Mapa principal - pantalla completa */}
-      <View style={styles.mapContainer}>
-        {isLoadingLocation ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={Colors.primary} />
-            <Text style={styles.loadingText}>Obteniendo ubicación...</Text>
-          </View>
-        ) : location ? (
-          <MapView
-            style={styles.map}
-            provider={PROVIDER_GOOGLE}
-            initialRegion={location}
-            showsUserLocation={true}
-            showsMyLocationButton={true}
-            zoomEnabled={true}
-            scrollEnabled={true}
-          >
-            <Marker
-              coordinate={{
-                latitude: location.latitude,
-                longitude: location.longitude,
-              }}
-              title="Tu ubicación"
-              description="Estás aquí"
-            />
-          </MapView>
-        ) : (
-          <View style={styles.errorContainer}>
-            <Ionicons
-              name="location-outline"
-              size={48}
-              color={Colors.textSecondary}
-            />
-            <Text style={styles.errorText}>
-              No se pudo obtener la ubicación
-            </Text>
-            <TouchableOpacity
-              style={styles.retryButton}
-              onPress={getCurrentLocation}
+      )}      {/* --- INICIO CAMBIO: Agrupo mapa y hospedajes en un contenedor flex --- */}
+      <View style={{ flex: 1 }}>
+        <View
+          style={[
+            styles.mapContainer,
+            isMenuExpanded ? styles.mapContainerExpanded : styles.mapContainerCompact
+          ]}
+        >
+          {isLoadingLocation ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={Colors.primary} />
+              <Text style={styles.loadingText}>Obteniendo ubicación...</Text>
+            </View>
+          ) : location ? (
+            <MapView
+              style={styles.map}
+              provider={PROVIDER_GOOGLE}
+              initialRegion={location}
+              showsUserLocation={true}
+              showsMyLocationButton={true}
+              zoomEnabled={true}
+              scrollEnabled={true}
             >
-              <Text style={styles.retryButtonText}>Intentar de nuevo</Text>
-            </TouchableOpacity>
+              <Marker
+                coordinate={{
+                  latitude: location.latitude,
+                  longitude: location.longitude,
+                }}
+                title="Tu ubicación"
+                description="Estás aquí"
+              />
+            </MapView>
+          ) : (
+            <View style={styles.errorContainer}>
+              <Ionicons
+                name="location-outline"
+                size={48}
+                color={Colors.textSecondary}
+              />
+              <Text style={styles.errorText}>
+                No se pudo obtener la ubicación
+              </Text>
+              <TouchableOpacity
+                style={styles.retryButton}
+                onPress={getCurrentLocation}
+              >
+                <Text style={styles.retryButtonText}>Intentar de nuevo</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+        {/* Contenedor de hospedajes - solo visible cuando el mapa está en modo compacto */}
+        {!isMenuExpanded && (
+          <View style={styles.neumorphicOuterShadow}>
+            <View style={styles.accommodationsContainerNeumorphicFullFixed}>
+              <View style={styles.accommodationsHeader}>
+                <Text style={styles.accommodationsTitle}>Hospedajes en la zona</Text>
+                <TouchableOpacity style={styles.viewAllButton}>
+                  <Text style={styles.viewAllText}>Ver todos</Text>
+                  <Ionicons name="chevron-forward-outline" size={16} color={Colors.primary} />
+                </TouchableOpacity>
+              </View>
+              {/* Lista de hospedajes */}
+              <FlatList
+                data={[
+                  { id: '1', name: 'Hotel Doctor Plaza', rating: 4.5, price: '$120/noche', distance: '0.2 km' },
+                  { id: '2', name: 'Medical Suites', rating: 4.3, price: '$95/noche', distance: '0.5 km' },
+                  { id: '3', name: 'Hospital Inn', rating: 4.7, price: '$150/noche', distance: '0.8 km' }
+                ]}
+                keyExtractor={(item) => item.id}
+                horizontal={true}
+              
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.accommodationsListFull}
+                style={{ flexGrow: 1 }}
+                renderItem={({ item }) => (
+                  <TouchableOpacity style={styles.accommodationCardNeumorphic} activeOpacity={0.7}>
+                    <View style={styles.accommodationImagePlaceholder}>
+                      <Ionicons name="bed-outline" size={32} color={Colors.primary} />
+                    </View>
+                    <View style={styles.accommodationInfo}>
+                      <Text style={styles.accommodationName}>{item.name}</Text>
+                      <View style={styles.accommodationDetails}>
+                        <View style={styles.ratingContainer}>
+                          <Ionicons name="star" size={14} color="#FFD700" />
+                          <Text style={styles.ratingText}>{item.rating}</Text>
+                        </View>
+                        <Text style={styles.distanceText}>{item.distance}</Text>
+                      </View>
+                      <Text style={styles.priceText}>{item.price}</Text>
+                    </View>
+                  </TouchableOpacity>
+                )}
+              />
+            </View>
           </View>
         )}
-      </View>{" "}
-      {/* Menu inferior */}
+      </View>
+      {/* --- FIN CAMBIO --- */}
+      {/* Menu inferior - posición fija en la parte inferior */}
       <View
         style={[
           styles.bottomMenu,
@@ -492,11 +544,10 @@ expandedMenuContainer: {
   shadowOpacity: 0.5,
   shadowRadius: 8,
   borderWidth: 1,
-  borderColor: "#f0f0f3",
-  elevation: 8, // Para Android
+  borderColor: "#f0f0f3",  elevation: 8, // Para Android
   },
   mapContainer: {
-    flex: 1,
+    // Estilo base para el contenedor del mapa (sin flex para permitir height específico)
     borderRadius: 0,
     overflow: "hidden",
     margin: 0,
@@ -540,19 +591,28 @@ expandedMenuContainer: {
     fontSize: 16,
     fontWeight: "500",
   },
+
   bottomMenu: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     flexDirection: "row",
-    backgroundColor: Colors.background,
-  justifyContent: "space-around",
-  borderTopWidth: 1,
-  borderTopColor: Colors.primary,
-  paddingVertical: 6, // Mucho menos padding vertical
-  paddingHorizontal: 0, // Sin padding horizontal extra
-  elevation: 0,         // Sin sombra ni elevación
-  shadowColor: "transparent",
-  shadowOffset: { width: 0, height: 0 },
-  shadowOpacity: 0,
-  shadowRadius: 0,
+    backgroundColor: Colors.shadow, // Fondo neomórfico
+    height: 60, // Altura casi igual a los iconos (48px icono + padding)
+    alignItems: "center",
+    justifyContent: "space-around",
+
+    // Cambiado a 4px para un borde más grueso
+    // Cambiado a 0 para que ocupe todo el ancho    
+    marginHorizontal: 0,
+  marginBottom: 2, // Sin margen inferior para ocupar todo el espacio
+    borderRadius: 0,
+    shadowColor: Colors.neumorphicDark,
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    elevation: 8,
   },
   menuItem: {
     alignItems: "center",
@@ -642,8 +702,153 @@ expandedMenuContainer: {
   },
   noResultsText: {
     color: Colors.textSecondary,
+    fontSize: 14,    fontStyle: "italic",
+  },  // Estilos condicionales para el mapa
+  mapContainerExpanded: {
+    // Cuando el menú está expandido, el mapa ocupa toda la pantalla disponible
+    flex: 1,
+    borderRadius: 0,
+    overflow: "hidden",
+    margin: 0,
+  },
+  mapContainerCompact: {
+    // Cuando el menú está cerrado, el mapa se muestra en una ventana pequeña (40% de la pantalla)
+    height: '38%',
+    borderRadius: 16,
+    overflow: "hidden",
+    margin: 10,
+    elevation: 8,
+    shadowColor: Colors.neumorphicDark,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+  },
+  // Estilos para el contenedor de hospedajes
+  neumorphicOuterShadow: {
+    flex: 1,
+minHeight: 0,
+    borderRadius: 32,
+    marginHorizontal: 0,
+    marginBottom: 0,
+    marginTop: 0,
+    shadowColor: Colors.neumorphicLight,
+    shadowOffset: { width: -8, height: -8 },
+    shadowOpacity: 0.8,
+    shadowRadius: 24,
+    backgroundColor: 'transparent',
+    elevation: 12,
+  },
+  accommodationsContainerNeumorphicFullFixed: {
+    flex: 1,
+    minHeight: 0,
+    backgroundColor: Colors.neumorphicBase,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+    paddingHorizontal: 16,
+    paddingTop: 20,
+    paddingBottom: 0, // El padding inferior lo da el SafeAreaView y el menú
+    marginHorizontal: 0,
+    marginBottom: 0,
+    shadowColor: Colors.neumorphicDark,
+    shadowOffset: { width: 8, height: 8 },
+    shadowOpacity: 0.18,
+    shadowRadius: 24,
+    elevation: 12,
+    borderWidth: 1,
+    borderColor: Colors.neumorphicLight,
+  },
+  accommodationsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  accommodationsTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: Colors.text,
+  },
+  viewAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  viewAllText: {
     fontSize: 14,
-    fontStyle: "italic",
+    color: Colors.primary,
+    marginRight: 4,
+  },
+  accommodationsListFull: {
+    paddingBottom: 24,
+    flexGrow: 1,
+  },
+  accommodationCard: {
+    width: 200,
+    backgroundColor: Colors.neumorphicCard,
+    borderRadius: 12,
+    marginRight: 12,
+    overflow: 'hidden',
+    elevation: 3,
+    shadowColor: Colors.neumorphicDark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  accommodationCardNeumorphic: {
+    width: 200,
+    backgroundColor: Colors.neumorphicCard,
+    borderRadius: 16,
+    marginRight: 16,
+    overflow: 'hidden',
+    // Sombra neomórfica doble
+    shadowColor: Colors.neumorphicDark,
+    shadowOffset: { width: 6, height: 6 },
+    shadowOpacity: 0.18,
+    shadowRadius: 16,
+    elevation: 8,
+    // Sombra clara para efecto de profundidad
+    borderWidth: 1,
+    borderColor: Colors.neumorphicLight,
+  },
+  accommodationImagePlaceholder: {
+    height: 120,
+    backgroundColor: Colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  accommodationInfo: {
+    padding: 12,
+  },
+  accommodationName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.text,
+    marginBottom: 4,
+  },
+  accommodationDetails: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  ratingText: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    marginLeft: 4,
+  },
+  distanceText: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+  },
+  priceText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.primary,
   },
 });
 
