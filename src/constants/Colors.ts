@@ -18,6 +18,8 @@ export default {
   info: '#2196F3',
   divider: '#E0E0E0',
   shadow: 'rgba(0, 0, 0, 0.1)',
+  red: 'red',
+  transparente: 'transparent',
   
   // Colores para Neomorfismo
   neonGreen: '#00FF88', // Verde neón
