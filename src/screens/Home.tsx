@@ -170,8 +170,7 @@ const Home = () => {
   };
   return (
     <SafeAreaView style={styles.container}>
-      {" "}
-      <StatusBar style="light" backgroundColor={Colors.secondary} />{" "}
+      <StatusBar style="light" backgroundColor={Colors.secondary} />
       {/* Menú flotante Iconos */}
       <View style={styles.floatingIconsContainer}>
         {/* Icono de filtro */}
@@ -186,7 +185,7 @@ const Home = () => {
               color={Colors.primary}
             />
           </View>
-        </TouchableOpacity>{" "}
+        </TouchableOpacity>
         {/* Icono de usuario */}
         <TouchableOpacity style={styles.floatingMenuItem} onPress={handleUser}>
           <View style={styles.userIconBackground}>
@@ -205,8 +204,8 @@ const Home = () => {
               color={Colors.primary}
             />
           </View>
-        </TouchableOpacity>{" "}
-      </View>{" "}
+        </TouchableOpacity>
+      </View>
       {/* Área expandible separada */}
       {isMenuExpanded && (
         <View style={styles.expandedMenuContainer}>
@@ -254,10 +253,10 @@ const Home = () => {
                   No se encontraron zonas
                 </Text>
               </View>
-            )}{" "}
-          </View>{" "}
+            )}
+          </View>
         </View>
-      )}{" "}
+      )}
       {/* Mapa principal - tamaño condicional */}
       <View
         style={[
@@ -385,7 +384,7 @@ const Home = () => {
             />
           </View>
         </View>
-      )}{" "}
+      )}
       {/* Menu inferior - posición dinámica según el estado del mapa */}
       <View
         style={[
@@ -393,7 +392,6 @@ const Home = () => {
           isMenuExpanded ? styles.bottomMenuExpanded : styles.bottomMenuCompact,
         ]}
       >
-        {" "}
         <TouchableOpacity
           style={styles.menuItem}
           onPress={handleMessages}
@@ -425,7 +423,7 @@ const Home = () => {
             <Ionicons name="school-outline" size={32} color={Colors.primary} />
           </View>
         </TouchableOpacity>
-      </View>{" "}
+      </View>
       {/* Barra Noticia */}
       <Noticiasdiarias />
       {/* Barra inferior Android - ahora parte del flujo normal */}

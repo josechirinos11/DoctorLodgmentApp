@@ -92,7 +92,8 @@ const SignUp = () => {
         style={styles.keyboardContainer}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
-      >        <ScrollView
+      >
+        <ScrollView
           contentContainerStyle={styles.scrollContainer}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
@@ -184,7 +185,8 @@ const SignUp = () => {
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
                 />
-              </View>              <TouchableOpacity
+              </View>
+              <TouchableOpacity
                 style={styles.signupButton}
                 onPress={handleSignUp}
                 disabled={isLoading}
@@ -194,7 +196,8 @@ const SignUp = () => {
                 ) : (
                   <Text style={styles.signupButtonText}>Registrarse</Text>
                 )}
-              </TouchableOpacity>              <View style={styles.loginContainer}>
+              </TouchableOpacity>
+              <View style={styles.loginContainer}>
                 <Text style={styles.loginText}>¿Ya tienes una cuenta? </Text>
                 <TouchableOpacity onPress={() => router.push("/login")}>
                   <Text style={styles.loginLink}>Inicia sesión</Text>
@@ -318,14 +321,14 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     fontWeight: "600",
   },
-  bottomOverlay: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: Platform.OS === "android" ? 45 : 0, // Franja más delgada para cubrir zona de navegación
-    backgroundColor: "#212121", // Negro para coincidir con la barra de navegación
-  },
+   bottomOverlay: {
+      position: "absolute",
+      bottom: 0,
+      left: 0,
+      right: 0,
+      height: Platform.OS === "android" ? 45 : 0, // Franja más delgada para cubrir zona de navegación
+      backgroundColor: "#212121", // Negro para coincidir con la barra de navegación
+    },
 });
 
 export default SignUp;

@@ -144,7 +144,7 @@ const Login = () => {
                     color={Colors.textSecondary}
                   />
                 </TouchableOpacity>
-              </View>{" "}
+              </View>
               <TouchableOpacity
                 style={styles.forgotPassword}
                 onPress={() =>
@@ -157,7 +157,7 @@ const Login = () => {
                 <Text style={styles.forgotPasswordText}>
                   ¿Olvidaste tu contraseña?
                 </Text>
-              </TouchableOpacity>{" "}
+              </TouchableOpacity>
               <TouchableOpacity
                 style={styles.loginButton}
                 onPress={handleLogin}
@@ -296,14 +296,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "bold",
   },
-  bottomOverlay: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: Platform.OS === "android" ? 45 : 0, // Franja más delgada para cubrir zona de navegación
-    backgroundColor: "#212121", // Negro para coincidir con la barra de navegación
-  },
+   bottomOverlay: {
+      position: "absolute",
+      bottom: 0,
+      left: 0,
+      right: 0,
+      height: Platform.OS === "android" ? 45 : 0, // Franja más delgada para cubrir zona de navegación
+      backgroundColor: "#212121", // Negro para coincidir con la barra de navegación
+    },
 });
 
 export default Login;

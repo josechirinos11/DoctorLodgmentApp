@@ -75,7 +75,7 @@ const Noticiasdiarias: React.FC = () => {
     }, 8500); // Un poco más que la duración de la animación
 
     return () => clearInterval(interval);
-  }, [currentIndex, animatedValue]);
+  }, [animatedValue]); // Removido currentIndex de las dependencias
 
   const currentNoticia = noticiasData[currentIndex];
 

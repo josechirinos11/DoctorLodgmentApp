@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
 import {
   Alert,
+  Platform,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -171,7 +172,8 @@ const Settings = () => {
         style={styles.settingItem}
         onPress={item.onPress}
         activeOpacity={item.type === 'switch' ? 1 : 0.7}
-      >        <View style={[styles.settingIcon, { backgroundColor: Colors.neonGreen }]}>
+      >
+        <View style={[styles.settingIcon, { backgroundColor: Colors.primary }]}>
           <Ionicons name={item.icon} size={24} color={Colors.neumorphicBase} />
         </View>
         <View style={styles.settingContent}>
@@ -182,18 +184,18 @@ const Settings = () => {
           <Switch
             value={item.value}
             onValueChange={item.onToggle}
-            trackColor={{ false: Colors.neumorphicDark, true: Colors.neonGreen }}
+            trackColor={{ false: Colors.neumorphicDark, true: Colors.primary }}
             thumbColor={item.value ? Colors.neumorphicLight : Colors.neumorphicDark}
           />
         ) : (
-          <Ionicons name="chevron-forward" size={20} color={Colors.neonGreen} />
+          <Ionicons name="chevron-forward" size={20} color={Colors.primary} />
         )}
       </TouchableOpacity>
     );
   };
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" backgroundColor={Colors.neumorphicBase} />
+      <StatusBar style="dark" />
       
       {/* Header */}
       <View style={styles.header}>
@@ -224,11 +226,20 @@ const Settings = () => {
           </Text>
         </View>
       </ScrollView>
+       <View style={styles.bottomOverlay} />
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+   bottomOverlay: {
+      position: "absolute",
+      bottom: 0,
+      left: 0,
+      right: 0,
+      height: Platform.OS === "android" ? 45 : 0, // Franja más delgada para cubrir zona de navegación
+      backgroundColor: "#212121", // Negro para coincidir con la barra de navegación
+    },
   container: {
     flex: 1,
     backgroundColor: Colors.neumorphicBase,
@@ -238,7 +249,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: 16,
+    paddingTop: Platform.OS === 'ios' ? 60 : 40,
     paddingBottom: 16,
   },
   backButton: {
@@ -300,7 +311,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
-    shadowColor: Colors.neonGreenDark,
+    shadowColor: Colors.primaryDark,
     shadowOffset: { width: 2, height: 2 },
     shadowOpacity: 0.4,
     shadowRadius: 4,
@@ -336,7 +347,7 @@ const styles = StyleSheet.create({
   appInfoText: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.neonGreen,
+    color: Colors.primary,
     marginBottom: 4,
   },
   appVersion: {

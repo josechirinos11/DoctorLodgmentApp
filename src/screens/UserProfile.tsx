@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
 import {
   Alert,
+  Platform,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -87,7 +88,7 @@ const UserProfile = () => {
   ];
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" backgroundColor={Colors.neumorphicBase} />
+      <StatusBar style="dark" translucent={false} />
       
       {/* Header */}
       <View style={styles.header}>
@@ -103,7 +104,7 @@ const UserProfile = () => {
         <View style={styles.profileSection}>
           <View style={styles.avatarContainer}>
             <View style={styles.avatar}>
-              <Ionicons name="person" size={60} color={Colors.neonGreen} />
+              <Ionicons name="person" size={60} color={Colors.primary} />
             </View>
             <TouchableOpacity style={styles.editAvatarButton}>
               <Ionicons name="camera" size={16} color={Colors.neumorphicBase} />
@@ -138,14 +139,14 @@ const UserProfile = () => {
               style={styles.menuItem}
               onPress={item.onPress}              activeOpacity={0.7}
             >
-              <View style={[styles.menuIcon, { backgroundColor: Colors.neonGreen }]}>
+              <View style={[styles.menuIcon, { backgroundColor: Colors.primary }]}>
                 <Ionicons name={item.icon as any} size={24} color={Colors.neumorphicBase} />
               </View>
               <View style={styles.menuContent}>
                 <Text style={styles.menuTitle}>{item.title}</Text>
                 <Text style={styles.menuSubtitle}>{item.subtitle}</Text>
               </View>
-              <Ionicons name="chevron-forward" size={20} color={Colors.neonGreen} />
+              <Ionicons name="chevron-forward" size={20} color={Colors.primary} />
             </TouchableOpacity>
           ))}
         </View>
@@ -155,7 +156,13 @@ const UserProfile = () => {
           <Ionicons name="log-out-outline" size={24} color={Colors.error} />
           <Text style={styles.logoutText}>Cerrar Sesión</Text>
         </TouchableOpacity>
+        
+        {/* Espaciado para el bottomOverlay */}
+        <View style={{ height: Platform.OS === "android" ? 60 : 20 }} />
       </ScrollView>
+      
+      {/* Bottom Overlay para cubrir la barra de navegación de Android */}
+      <View style={styles.bottomOverlay} />
     </SafeAreaView>
   );
 };
@@ -169,7 +176,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',    alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: 16,
+    paddingTop: Platform.OS === 'ios' ? 60 : 40,
     paddingBottom: 16,
   },
   backButton: {
@@ -234,10 +241,10 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: Colors.neonGreen,
+    backgroundColor: Colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: Colors.neonGreenDark,
+    shadowColor: Colors.primaryDark,
     shadowOffset: { width: 2, height: 2 },
     shadowOpacity: 0.5,
     shadowRadius: 4,
@@ -251,7 +258,7 @@ const styles = StyleSheet.create({
   },
   userRole: {
     fontSize: 16,
-    color: Colors.neonGreen,
+    color: Colors.primary,
     marginBottom: 24,
     fontWeight: '600',
   },
@@ -273,7 +280,7 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 24,
     fontWeight: '700',
-    color: Colors.neonGreen,
+    color: Colors.primary,
     marginBottom: 4,
   },
   statLabel: {
@@ -305,7 +312,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
-    shadowColor: Colors.neonGreenDark,
+    shadowColor: Colors.primaryDark,
     shadowOffset: { width: 2, height: 2 },
     shadowOpacity: 0.4,
     shadowRadius: 4,
@@ -347,6 +354,14 @@ const styles = StyleSheet.create({
     color: Colors.error,
     marginLeft: 8,
   },
+   bottomOverlay: {
+      position: "absolute",
+      bottom: 0,
+      left: 0,
+      right: 0,
+      height: Platform.OS === "android" ? 45 : 0, // Franja más delgada para cubrir zona de navegación
+      backgroundColor: "#212121", // Negro para coincidir con la barra de navegación
+    },
 });
 
 export default UserProfile;
