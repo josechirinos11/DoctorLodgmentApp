@@ -447,7 +447,7 @@ const styles = StyleSheet.create({
   container: {
     height: SAFEAREA_HEIGHT, // 100% de la pantalla usando Dimensions
     width: width, // 100% del ancho
-    backgroundColor: Colors.red, // Fondo negro para combinar con la navegación
+    backgroundColor: Colors.neumorphicBase, // Fondo neomórfico en lugar de surfaceGray
   },
   floatingMenu: {
     position: "absolute",
@@ -467,7 +467,7 @@ const styles = StyleSheet.create({
     top: 50,
     right: 16,
     zIndex: 1001,
-    backgroundColor: Colors.background, // Fondo gris clarito típico neumorfismo
+    backgroundColor: Colors.neumorphicBase, // Base neomórfica consistente
     borderRadius: 25,
     paddingVertical: 12,
     paddingHorizontal: 8,
@@ -475,16 +475,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderTopWidth: 1,
     borderTopColor: Colors.primary,
-    // Sombra clara (arriba-izquierda)
-    shadowColor: "#fff",
+    // Sombra clara (arriba-izquierda) - neomorfismo
+    shadowColor: Colors.neumorphicLight,
     shadowOffset: { width: -4, height: -4 },
-    shadowOpacity: 1,
+    shadowOpacity: 0.9,
     shadowRadius: 8,
-    // Sombra oscura (abajo-derecha)
+    // Sombra oscura (abajo-derecha) - neomorfismo
     elevation: 10, // Para Android
-    // Truco: Puedes poner border para el bisel característico neumorfismo
     borderWidth: 1,
-    borderColor: Colors.primary,
+    borderColor: Colors.neumorphicLight,
   },
 
   // Contenedor para el área expandida
@@ -551,46 +550,46 @@ const styles = StyleSheet.create({
   filterIconBackground: {
     width: 40,
     height: 40,
-    backgroundColor: "#fff", // Fondo blanco igual que los demás
+    backgroundColor: Colors.neumorphicCard, // Uso de color neomórfico consistente
     borderRadius: 20,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#b8c6db",
+    shadowColor: Colors.neumorphicDark, // Color neomórfico para sombras
     shadowOffset: { width: 4, height: 4 },
-    shadowOpacity: 0.5,
+    shadowOpacity: 0.6,
     shadowRadius: 8,
     borderWidth: 1,
-    borderColor: "#f0f0f3",
+    borderColor: Colors.neumorphicLight, // Borde neomórfico
     elevation: 8, // Para Android
   },
   userIconBackground: {
     width: 40,
     height: 40,
-    backgroundColor: "#fff", // Fondo blanco igual que los demás
+    backgroundColor: Colors.neumorphicCard, // Uso de color neomórfico consistente
     borderRadius: 20,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#b8c6db",
+    shadowColor: Colors.neumorphicDark, // Color neomórfico para sombras
     shadowOffset: { width: 4, height: 4 },
-    shadowOpacity: 0.5,
+    shadowOpacity: 0.6,
     shadowRadius: 8,
     borderWidth: 1,
-    borderColor: "#f0f0f3",
+    borderColor: Colors.neumorphicLight, // Borde neomórfico
     elevation: 8, // Para Android
   },
   settingsIconBackground: {
     width: 40,
     height: 40,
-    backgroundColor: "#fff", // Fondo blanco igual que los demás
+    backgroundColor: Colors.neumorphicCard, // Uso de color neomórfico consistente
     borderRadius: 20,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#b8c6db",
+    shadowColor: Colors.neumorphicDark, // Color neomórfico para sombras
     shadowOffset: { width: 4, height: 4 },
-    shadowOpacity: 0.5,
+    shadowOpacity: 0.6,
     shadowRadius: 8,
     borderWidth: 1,
-    borderColor: "#f0f0f3",
+    borderColor: Colors.neumorphicLight, // Borde neomórfico
     elevation: 8, // Para Android
   },
   mapContainer: {
@@ -599,6 +598,8 @@ const styles = StyleSheet.create({
     borderRadius: 0,
     overflow: "hidden",
     margin: 0,
+     borderWidth: 1,
+    borderColor: Colors.neumorphicLight, // Borde neomórfico
   },
   map: {
     flex: 1,
@@ -687,14 +688,14 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#fff",
+    backgroundColor: Colors.neumorphicCard, // Color neomórfico consistente
     borderRadius: 20,
-    shadowColor: "#b8c6db", // Azul-gris claro (sombra principal)
+    shadowColor: Colors.neumorphicDark, // Sombra neomórfica
     shadowOffset: { width: 4, height: 4 },
-    shadowOpacity: 0.5,
+    shadowOpacity: 0.6,
     shadowRadius: 8,
     borderWidth: 1,
-    borderColor: "#f0f0f3",
+    borderColor: Colors.neumorphicLight, // Borde neomórfico
     elevation: 8, // Para Android
   },
   menuText: {
@@ -705,7 +706,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   }, // Estilos para el área de búsqueda
   searchInput: {
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.neumorphicCard, // Fondo neomórfico
     borderRadius: 12,
     paddingHorizontal: 12, // Reducido de 16 a 12
     paddingVertical: 10, // Reducido de 12 a 10
@@ -713,10 +714,16 @@ const styles = StyleSheet.create({
     marginBottom: 8, // Reducido margen inferior
     marginHorizontal: 0, // Sin margen horizontal para ocupar todo el ancho
     fontSize: 16,
-    color: Colors.text,
+    color: Colors.neumorphicText, // Texto neomórfico
     borderWidth: 1,
-    borderColor: Colors.divider,
+    borderColor: Colors.neumorphicLight, // Borde neomórfico
     textAlign: "left",
+    // Efecto neomórfico hundido
+    shadowColor: Colors.neumorphicDark,
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 2,
   },
   zonesList: {
     maxHeight: 250, // Altura un poco más grande
@@ -789,7 +796,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: -8, height: -8 },
     shadowOpacity: 0.8,
     shadowRadius: 24,
-    backgroundColor: Colors.red, // Debe ser transparente para que solo se vea la sombra
+    backgroundColor: Colors.transparente, // Transparente para que solo se vea la sombra
     elevation: 12,
   },
   accommodationsContainerNeumorphicFullFixed: {

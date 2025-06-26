@@ -21,14 +21,14 @@ export default {
   red: 'red',
   transparente: 'transparent',
   
-  // Colores para Neomorfismo
+  // Colores para Neomorfismo (mejorados)
   neonGreen: '#00FF88', // Verde neón
   neonGreenDark: '#00CC6A', // Verde neón oscuro
   neonGreenLight: '#4DFFAA', // Verde neón claro
-  neumorphicBase: '#F0F2F5', // Base gris claro para neomorfismo
-  neumorphicDark: '#D1D5DB', // Sombra oscura neomórfica
+  neumorphicBase: '#E6E9EF', // Base gris más contrastante para neomorfismo
+  neumorphicDark: '#BCC0C7', // Sombra oscura neomórfica más contrastante
   neumorphicLight: '#FFFFFF', // Sombra clara neomórfica
-  neumorphicCard: '#F8FAFC', // Fondo de tarjetas neomórficas
-  neumorphicText: '#374151', // Texto oscuro para neomorfismo
-  neumorphicTextSecondary: '#6B7280', // Texto secundario neomórfico
+  neumorphicCard: '#F1F4F8', // Fondo de tarjetas neomórficas más contrastante
+  neumorphicText: '#2D3748', // Texto oscuro para neomorfismo
+  neumorphicTextSecondary: '#4A5568', // Texto secundario neomórfico más oscuro
 };
