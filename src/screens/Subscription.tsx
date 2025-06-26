@@ -4,18 +4,22 @@ import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
 import {
-    Alert,
-    Platform,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  Alert,
+  Dimensions,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Colors from '../constants/Colors';
 
-const Subscription = () => {
+const { width, height } = Dimensions.get('window');
+
+const Subscription: React.FC = () => {
+    const insets = useSafeAreaInsets();
   const [currentPlan, setCurrentPlan] = useState('premium');
   const [billingInfo, setBillingInfo] = useState({
     nextBilling: '15 Jul 2025',
@@ -23,55 +27,63 @@ const Subscription = () => {
     method: 'Visa ****1234'
   });
 
-  useEffect(() => {
-    if (Platform.OS === 'android') {
-      NavigationBar.setBackgroundColorAsync(Colors.secondary);
-      NavigationBar.setButtonStyleAsync('light');
-    }
-  }, []);
+    useEffect(() => {
+        const setupNavigationBar = async () => {
+            if (Platform.OS === 'android') {
+                try {
+                    await NavigationBar.setBackgroundColorAsync(Colors.neumorphicBase);
+                    await NavigationBar.setBorderColorAsync(Colors.neumorphicBase);
+                    await NavigationBar.setButtonStyleAsync('light');
+                } catch (error) {
+                    console.warn('Error setting navigation bar:', error);
+                }
+            }
+        };
+        setupNavigationBar();
+    }, []);
 
-  const plans = [
-    {
-      id: 'basic',
-      name: 'Básico',
-      price: 'Gratis',
-      features: [
-        'Búsqueda básica de médicos',
-        'Perfil limitado',
-        'Hasta 3 consultas por mes'
-      ],
-      color: '#64B5F6',
-      current: currentPlan === 'basic'
-    },
-    {
-      id: 'premium',
-      name: 'Premium',
-      price: '$9.99/mes',
-      features: [
-        'Búsqueda avanzada de médicos',
-        'Perfil completo con fotos',
-        'Consultas ilimitadas',
-        'Soporte prioritario',
-        'Mensajería directa'
-      ],
-      color: Colors.primary,
-      current: currentPlan === 'premium'
-    },
-    {
-      id: 'professional',
-      name: 'Profesional',
-      price: '$19.99/mes',
-      features: [
-        'Todas las funciones Premium',
-        'Perfil verificado',
-        'Estadísticas avanzadas',
-        'API de integración',
-        'Soporte 24/7'
-      ],
-      color: '#FFB74D',
-      current: currentPlan === 'professional'
-    }
-  ];
+    const plans = [
+        {
+            id: 'basic',
+            name: 'Básico',
+            price: 'Gratis',
+            features: [
+                'Búsqueda básica de médicos',
+                'Perfil limitado',
+                'Hasta 3 consultas por mes'
+            ],
+            color: Colors.neumorphicTextSecondary,
+            current: currentPlan === 'basic'
+        },
+        {
+            id: 'premium',
+            name: 'Premium',
+            price: '$9.99/mes',
+            features: [
+                'Búsqueda avanzada de médicos',
+                'Perfil completo con fotos',
+                'Consultas ilimitadas',
+                'Soporte prioritario',
+                'Mensajería directa'
+            ],
+            color: Colors.primary,
+            current: currentPlan === 'premium'
+        },
+        {
+            id: 'professional',
+            name: 'Profesional',
+            price: '$19.99/mes',
+            features: [
+                'Todas las funciones Premium',
+                'Perfil verificado',
+                'Estadísticas avanzadas',
+                'API de integración',
+                'Soporte 24/7'
+            ],
+            color: Colors.neonGreen,
+            current: currentPlan === 'professional'
+        }
+    ];
 
   const handleUpgrade = (planId: string) => {
     Alert.alert(
@@ -105,54 +117,54 @@ const Subscription = () => {
     );
   };
 
-  const PlanCard = ({ plan }: any) => (
-    <View style={[styles.planCard, plan.current && styles.currentPlan]}>
-      <View style={styles.planHeader}>
-        <View style={[styles.planIcon, { backgroundColor: plan.color }]}>
-          <Ionicons 
-            name={plan.current ? "checkmark-circle" : "radio-button-off"} 
-            size={24} 
-            color={Colors.textLight} 
-          />
+    const PlanCard = ({ plan }: { plan: any }) => (
+        <View style={[styles.planCard, plan.current && styles.currentPlan]}>
+            <View style={styles.planHeader}>
+                <View style={[styles.planIcon, { backgroundColor: plan.color }]}>
+                    <Ionicons 
+                        name={plan.current ? "checkmark-circle" : "radio-button-off"} 
+                        size={24} 
+                        color={Colors.neumorphicLight} 
+                    />
+                </View>
+                <View style={styles.planInfo}>
+                    <Text style={styles.planName}>{plan.name}</Text>
+                    <Text style={styles.planPrice}>{plan.price}</Text>
+                </View>
+                {!plan.current && (
+                    <TouchableOpacity 
+                        style={[styles.upgradeButton, { backgroundColor: plan.color }]}
+                        onPress={() => handleUpgrade(plan.id)}
+                    >
+                        <Text style={styles.upgradeButtonText}>Cambiar</Text>
+                    </TouchableOpacity>
+                )}
+            </View>
+            <View style={styles.featuresContainer}>
+                {plan.features.map((feature: string, index: number) => (
+                    <View key={index} style={styles.featureItem}>
+                        <Ionicons name="checkmark" size={16} color={plan.color} />
+                        <Text style={styles.featureText}>{feature}</Text>
+                    </View>
+                ))}
+            </View>
         </View>
-        <View style={styles.planInfo}>
-          <Text style={styles.planName}>{plan.name}</Text>
-          <Text style={styles.planPrice}>{plan.price}</Text>
-        </View>
-        {!plan.current && (
-          <TouchableOpacity 
-            style={[styles.upgradeButton, { backgroundColor: plan.color }]}
-            onPress={() => handleUpgrade(plan.id)}
-          >
-            <Text style={styles.upgradeButtonText}>Cambiar</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-      <View style={styles.featuresContainer}>
-        {plan.features.map((feature: string, index: number) => (
-          <View key={index} style={styles.featureItem}>
-            <Ionicons name="checkmark" size={16} color={plan.color} />
-            <Text style={styles.featureText}>{feature}</Text>
-          </View>
-        ))}
-      </View>
-    </View>
-  );
+    );
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="light" />
-      
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color={Colors.textLight} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Suscripción</Text>
-        <View style={{ width: 40 }} />
-      </View>
+    return (
+        <View style={[styles.container, { paddingTop: insets.top }]}>
+            <StatusBar style="dark" backgroundColor={Colors.neumorphicBase} />
+            
+            {/* Header */}
+            <View style={[styles.header, { paddingTop: Platform.OS === 'ios' ? 10 : 20 }]}>
+                <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                    <Ionicons name="arrow-back" size={24} color={Colors.neumorphicText} />
+                </TouchableOpacity>
+                <Text style={styles.headerTitle}>Suscripción</Text>
+                <View style={{ width: 40 }} />
+            </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+            <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Current Plan Info */}
         <View style={styles.currentPlanInfo}>
           <Text style={styles.sectionTitle}>Plan Actual</Text>
@@ -185,55 +197,62 @@ const Subscription = () => {
         {/* Actions */}
         <View style={styles.actionsSection}>
           <TouchableOpacity style={styles.actionButton}>
-            <Ionicons name="card-outline" size={24} color={Colors.primary} />
+            <Ionicons name="card-outline" size={24} color={Colors.neumorphicText} />
             <Text style={styles.actionText}>Cambiar Método de Pago</Text>
-            <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
+            <Ionicons name="chevron-forward" size={20} color={Colors.neumorphicTextSecondary} />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.actionButton}>
-            <Ionicons name="receipt-outline" size={24} color={Colors.primary} />
+            <Ionicons name="receipt-outline" size={24} color={Colors.neumorphicText} />
             <Text style={styles.actionText}>Historial de Pagos</Text>
-            <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
+            <Ionicons name="chevron-forward" size={20} color={Colors.neumorphicTextSecondary} />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.actionButton} onPress={handleCancelSubscription}>
             <Ionicons name="close-circle-outline" size={24} color={Colors.error} />
             <Text style={[styles.actionText, { color: Colors.error }]}>Cancelar Suscripción</Text>
-            <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
+            <Ionicons name="chevron-forward" size={20} color={Colors.neumorphicTextSecondary} />
           </TouchableOpacity>
         </View>
 
         <View style={{ height: 100 }} />
       </ScrollView>
-    </SafeAreaView>
-  );
+
+            {/* Bottom Overlay for Android Navigation Bar */}
+            {Platform.OS === 'android' && (
+                <View style={styles.bottomOverlay} />
+            )}
+        </View>
+    );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.secondary,
+    backgroundColor: Colors.neumorphicBase,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: 16,
     paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
   },
   backButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: Colors.neumorphicCard,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: Colors.neumorphicDark,
+    shadowOffset: { width: -2, height: -2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 3,
   },
   headerTitle: {
-    color: Colors.textLight,
+    color: Colors.neumorphicText,
     fontSize: 18,
     fontWeight: '600',
   },
@@ -242,7 +261,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   sectionTitle: {
-    color: Colors.textLight,
+    color: Colors.neumorphicText,
     fontSize: 20,
     fontWeight: '600',
     marginBottom: 16,
@@ -252,9 +271,14 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   billingCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: Colors.neumorphicCard,
     borderRadius: 16,
     padding: 20,
+    shadowColor: Colors.neumorphicDark,
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   billingRow: {
     flexDirection: 'row',
@@ -263,11 +287,11 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   billingLabel: {
-    color: Colors.textSecondary,
+    color: Colors.neumorphicTextSecondary,
     fontSize: 16,
   },
   billingValue: {
-    color: Colors.textLight,
+    color: Colors.neumorphicText,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -275,16 +299,26 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   planCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: Colors.neumorphicCard,
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
     borderWidth: 2,
     borderColor: 'transparent',
+    shadowColor: Colors.neumorphicDark,
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   currentPlan: {
     borderColor: Colors.primary,
-    backgroundColor: 'rgba(74, 144, 226, 0.1)',
+    backgroundColor: Colors.neumorphicCard,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
   },
   planHeader: {
     flexDirection: 'row',
@@ -303,21 +337,26 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   planName: {
-    color: Colors.textLight,
+    color: Colors.neumorphicText,
     fontSize: 18,
     fontWeight: '600',
   },
   planPrice: {
-    color: Colors.textSecondary,
+    color: Colors.neumorphicTextSecondary,
     fontSize: 14,
   },
   upgradeButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
+    shadowColor: Colors.neumorphicDark,
+    shadowOffset: { width: 1, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 2,
   },
   upgradeButtonText: {
-    color: Colors.textLight,
+    color: Colors.neumorphicLight,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -330,7 +369,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   featureText: {
-    color: Colors.textSecondary,
+    color: Colors.neumorphicTextSecondary,
     fontSize: 14,
   },
   actionsSection: {
@@ -339,16 +378,29 @@ const styles = StyleSheet.create({
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: Colors.neumorphicCard,
     borderRadius: 16,
     padding: 16,
     marginBottom: 8,
+    shadowColor: Colors.neumorphicDark,
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   actionText: {
     flex: 1,
-    color: Colors.textLight,
+    color: Colors.neumorphicText,
     fontSize: 16,
     marginLeft: 12,
+  },
+  bottomOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: Platform.OS === 'android' ? 45 : 0,
+    backgroundColor: '#212121',
   },
 });
 

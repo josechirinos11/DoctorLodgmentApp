@@ -9,18 +9,19 @@ import {
   FlatList,
   Image,
   Platform,
-  SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Colors from '../constants/Colors';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 const photoSize = (width - 48) / 3; // 3 columnas con espaciado
 
-const MyPhotos = () => {
+const MyPhotos: React.FC = () => {
+  const insets = useSafeAreaInsets();
   const [photos, setPhotos] = useState([
     { id: '1', uri: 'https://picsum.photos/400/400?random=1', type: 'profile' },
     { id: '2', uri: 'https://picsum.photos/400/400?random=2', type: 'gallery' },
@@ -32,10 +33,18 @@ const MyPhotos = () => {
   const [selectedFilter, setSelectedFilter] = useState('all');
 
   useEffect(() => {
-    if (Platform.OS === 'android') {
-      NavigationBar.setBackgroundColorAsync(Colors.secondary);
-      NavigationBar.setButtonStyleAsync('light');
-    }
+    const setupNavigationBar = async () => {
+      if (Platform.OS === 'android') {
+        try {
+          await NavigationBar.setBackgroundColorAsync(Colors.neumorphicBase);
+          await NavigationBar.setBorderColorAsync(Colors.neumorphicBase);
+          await NavigationBar.setButtonStyleAsync('dark');
+        } catch (error) {
+          console.warn('Error setting navigation bar:', error);
+        }
+      }
+    };
+    setupNavigationBar();
   }, []);
 
   const filters = [
@@ -112,7 +121,7 @@ const MyPhotos = () => {
         <Ionicons 
           name={getPhotoTypeIcon(item.type)} 
           size={16} 
-          color={Colors.textLight} 
+          color={Colors.neumorphicLight} 
         />
       </View>
     </TouchableOpacity>
@@ -129,7 +138,7 @@ const MyPhotos = () => {
       <Ionicons 
         name={item.icon as any} 
         size={20} 
-        color={selectedFilter === item.id ? Colors.textLight : Colors.textSecondary} 
+        color={selectedFilter === item.id ? Colors.neumorphicLight : Colors.neumorphicTextSecondary} 
       />
       <Text style={[
         styles.filterText,
@@ -141,17 +150,17 @@ const MyPhotos = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="light" />
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      <StatusBar style="dark" backgroundColor={Colors.neumorphicBase} />
       
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: Platform.OS === 'ios' ? 10 : 20 }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color={Colors.textLight} />
+          <Ionicons name="arrow-back" size={24} color={Colors.neumorphicText} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Mis Fotos</Text>
         <TouchableOpacity style={styles.addButton} onPress={handleAddPhoto}>
-          <Ionicons name="add" size={24} color={Colors.textLight} />
+          <Ionicons name="add" size={24} color={Colors.neumorphicLight} />
         </TouchableOpacity>
       </View>
 
@@ -198,7 +207,7 @@ const MyPhotos = () => {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Ionicons name="camera-outline" size={64} color={Colors.textSecondary} />
+            <Ionicons name="camera-outline" size={64} color={Colors.neumorphicTextSecondary} />
             <Text style={styles.emptyText}>No hay fotos</Text>
             <Text style={styles.emptySubtext}>
               {selectedFilter === 'all' 
@@ -209,96 +218,144 @@ const MyPhotos = () => {
           </View>
         }
       />
-    </SafeAreaView>
+
+      {/* Bottom Overlay para Android */}
+      {Platform.OS === 'android' && (
+        <View style={styles.bottomOverlay} />
+      )}
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.secondary,
+    backgroundColor: Colors.neumorphicBase,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    backgroundColor: Colors.neumorphicBase,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Colors.neumorphicCard,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: Colors.neumorphicDark,
+    shadowOffset: {
+      width: -3,
+      height: -3,
+    },
+    shadowOpacity: 0.5,
+    shadowRadius: 6,
+    elevation: 6,
   },
   headerTitle: {
-    color: Colors.textLight,
-    fontSize: 18,
-    fontWeight: '600',
+    color: Colors.neumorphicText,
+    fontSize: 20,
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
   addButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: Colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: Colors.primaryDark,
+    shadowOffset: {
+      width: 2,
+      height: 2,
+    },
+    shadowOpacity: 0.5,
+    shadowRadius: 4,
+    elevation: 4,
   },
   statsContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
+    backgroundColor: Colors.neumorphicCard,
+    marginHorizontal: 20,
+    marginTop: 10,
+    marginBottom: 20,
+    borderRadius: 20,
     paddingVertical: 20,
+    paddingHorizontal: 16,
     justifyContent: 'space-around',
+    shadowColor: Colors.neumorphicDark,
+    shadowOffset: {
+      width: -4,
+      height: -4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   statItem: {
     alignItems: 'center',
   },
   statNumber: {
-    color: Colors.textLight,
+    color: Colors.primary,
     fontSize: 24,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   statLabel: {
-    color: Colors.textSecondary,
+    color: Colors.neumorphicTextSecondary,
     fontSize: 12,
     marginTop: 4,
+    fontWeight: '500',
   },
   filtersContainer: {
     paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    paddingHorizontal: 20,
   },
   filtersList: {
-    paddingHorizontal: 16,
     gap: 8,
   },
   filterButton: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 10,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: Colors.neumorphicCard,
+    shadowColor: Colors.neumorphicDark,
+    shadowOffset: {
+      width: -2,
+      height: -2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
     gap: 6,
   },
   activeFilter: {
     backgroundColor: Colors.primary,
+    shadowColor: Colors.primaryDark,
+    shadowOffset: {
+      width: 2,
+      height: 2,
+    },
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+    elevation: 4,
   },
   filterText: {
-    color: Colors.textSecondary,
+    color: Colors.neumorphicTextSecondary,
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   activeFilterText: {
-    color: Colors.textLight,
+    color: Colors.neumorphicLight,
   },
   photosGrid: {
-    padding: 16,
+    padding: 20,
   },
   photoRow: {
     justifyContent: 'space-between',
@@ -306,10 +363,19 @@ const styles = StyleSheet.create({
   photoContainer: {
     width: photoSize,
     height: photoSize,
-    marginBottom: 8,
-    borderRadius: 12,
+    marginBottom: 12,
+    borderRadius: 16,
     overflow: 'hidden',
     position: 'relative',
+    backgroundColor: Colors.neumorphicCard,
+    shadowColor: Colors.neumorphicDark,
+    shadowOffset: {
+      width: -3,
+      height: -3,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
   },
   photo: {
     width: '100%',
@@ -320,29 +386,59 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 8,
     right: 8,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: Colors.primary,
     borderRadius: 12,
-    padding: 4,
+    padding: 6,
+    shadowColor: Colors.primaryDark,
+    shadowOffset: {
+      width: 1,
+      height: 1,
+    },
+    shadowOpacity: 0.4,
+    shadowRadius: 2,
+    elevation: 2,
   },
   emptyContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 60,
+    backgroundColor: Colors.neumorphicCard,
+    marginHorizontal: 20,
+    marginTop: 20,
+    borderRadius: 20,
+    shadowColor: Colors.neumorphicDark,
+    shadowOffset: {
+      width: -4,
+      height: -4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   emptyText: {
-    color: Colors.textLight,
+    color: Colors.neumorphicText,
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '700',
     marginTop: 16,
+    letterSpacing: 0.3,
   },
   emptySubtext: {
-    color: Colors.textSecondary,
+    color: Colors.neumorphicTextSecondary,
     fontSize: 14,
     textAlign: 'center',
     marginTop: 8,
     paddingHorizontal: 32,
     lineHeight: 20,
+    fontWeight: '400',
+  },
+  bottomOverlay: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: Platform.OS === "android" ? 45 : 0, // Franja más delgada para cubrir zona de navegación
+    backgroundColor: "#212121", // Negro para coincidir con la barra de navegación
   },
 });
 

@@ -1,26 +1,47 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as NavigationBar from 'expo-navigation-bar';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Alert,
+  Dimensions,
   Platform,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Colors from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
 
-const UserProfile = () => {
+const { width, height } = Dimensions.get('window');
+
+const UserProfile: React.FC = () => {
+  const insets = useSafeAreaInsets();
   const { user, logout } = useAuth();
   const [userStats, setUserStats] = useState({
     messages: 42,
     photos: 18,
-    posts: 7  });
+    posts: 7
+  });
+
+  useEffect(() => {
+    const setupNavigationBar = async () => {
+      if (Platform.OS === 'android') {
+        try {
+          await NavigationBar.setBackgroundColorAsync(Colors.neumorphicBase);
+          await NavigationBar.setBorderColorAsync(Colors.neumorphicBase);
+          await NavigationBar.setButtonStyleAsync('light');
+        } catch (error) {
+          console.warn('Error setting navigation bar:', error);
+        }
+      }
+    };
+    setupNavigationBar();
+  }, []);
 
   const handleLogout = () => {
     Alert.alert(
@@ -52,14 +73,14 @@ const UserProfile = () => {
       title: 'Suscripción',
       subtitle: 'Gestiona tu plan y facturación',
       icon: 'card-outline',
-      color: '#FFB74D',
+      color: Colors.neonGreen,
       onPress: () => router.push('/subscription')
     },    {
       id: 'photos',
       title: 'Mis Fotos',
       subtitle: `${userStats.photos} fotos subidas`,
       icon: 'camera-outline',
-      color: '#64B5F6',
+      color: Colors.neonGreenDark,
       onPress: () => router.push('/my-photos')
     },
     {
@@ -67,7 +88,7 @@ const UserProfile = () => {
       title: 'Mensajes',
       subtitle: `${userStats.messages} conversaciones`,
       icon: 'chatbubbles-outline',
-      color: '#81C784',
+      color: Colors.info,
       onPress: () => Alert.alert('Mensajes', 'Funcionalidad en desarrollo')
     },
     {
@@ -75,23 +96,23 @@ const UserProfile = () => {
       title: 'Mi Contenido',
       subtitle: `${userStats.posts} publicaciones`,
       icon: 'library-outline',
-      color: '#F06292',
+      color: Colors.accent,
       onPress: () => Alert.alert('Contenido', 'Funcionalidad en desarrollo')
     },    {
       id: 'privacy',
       title: 'Privacidad',
       subtitle: 'Configuración de privacidad',
       icon: 'shield-checkmark-outline',
-      color: '#9575CD',
+      color: Colors.success,
       onPress: () => router.push('/privacy')
     }
   ];
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" />
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      <StatusBar style="dark" backgroundColor={Colors.neumorphicBase} />
       
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: Platform.OS === 'ios' ? 10 : 20 }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color={Colors.neumorphicText} />
         </TouchableOpacity>
@@ -139,7 +160,7 @@ const UserProfile = () => {
               style={styles.menuItem}
               onPress={item.onPress}              activeOpacity={0.7}
             >
-              <View style={[styles.menuIcon, { backgroundColor: Colors.primary }]}>
+              <View style={[styles.menuIcon, { backgroundColor: item.color }]}>
                 <Ionicons name={item.icon as any} size={24} color={Colors.neumorphicBase} />
               </View>
               <View style={styles.menuContent}>
@@ -153,7 +174,7 @@ const UserProfile = () => {
 
         {/* Logout Button */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Ionicons name="log-out-outline" size={24} color={Colors.error} />
+          <Ionicons name="log-out-outline" size={24} color={Colors.primary} />
           <Text style={styles.logoutText}>Cerrar Sesión</Text>
         </TouchableOpacity>
         
@@ -162,8 +183,10 @@ const UserProfile = () => {
       </ScrollView>
       
       {/* Bottom Overlay para cubrir la barra de navegación de Android */}
-      <View style={styles.bottomOverlay} />
-    </SafeAreaView>
+      {Platform.OS === 'android' && (
+        <View style={styles.bottomOverlay} />
+      )}
+    </View>
   );
 };
 
@@ -173,29 +196,34 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.neumorphicBase,
   },
   header: {
-    flexDirection: 'row',    alignItems: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
-    paddingBottom: 16,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    backgroundColor: Colors.neumorphicBase,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.neumorphicBase,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Colors.neumorphicCard,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: Colors.neumorphicDark,
-    shadowOffset: { width: -3, height: -3 },
-    shadowOpacity: 1,
+    shadowOffset: {
+      width: -3,
+      height: -3,
+    },
+    shadowOpacity: 0.5,
     shadowRadius: 6,
     elevation: 6,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: '600',
     color: Colors.neumorphicText,
+    fontSize: 20,
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
   placeholder: {
     width: 40,
@@ -354,13 +382,13 @@ const styles = StyleSheet.create({
     color: Colors.error,
     marginLeft: 8,
   },
-   bottomOverlay: {
-      position: "absolute",
-      bottom: 0,
-      left: 0,
-      right: 0,
-      height: Platform.OS === "android" ? 45 : 0, // Franja más delgada para cubrir zona de navegación
-      backgroundColor: "#212121", // Negro para coincidir con la barra de navegación
+    bottomOverlay: {
+        position: "absolute",
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: Platform.OS === "android" ? 45 : 0, // Franja más delgada para cubrir zona de navegación
+        backgroundColor: "#212121", // Negro para coincidir con la barra de navegación
     },
 });
 

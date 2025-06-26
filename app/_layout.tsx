@@ -16,14 +16,13 @@ export default function RootLayout() {
         <Stack.Screen name="index" />
         <Stack.Screen name="login" />
         <Stack.Screen name="signup" />
-        <Stack.Screen name="home" />
-        <Stack.Screen name="user-profile" />
-        <Stack.Screen name="settings" />
-        <Stack.Screen name="edit-profile" />
-        <Stack.Screen name="subscription" />
-        <Stack.Screen name="change-password" />
-        <Stack.Screen name="my-photos" />
-        <Stack.Screen name="privacy" />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="edit-profile" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="subscription" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="change-password" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="my-photos" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="privacy" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="settings" options={{ presentation: 'modal' }} />
       </Stack>
     </AuthProvider>
   );
