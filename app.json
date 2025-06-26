@@ -16,14 +16,12 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": false,      
       "navigationBar": {
         "backgroundColor": "#212121",
         "barStyle": "light-content",
         "visible": true
       },
       "statusBar": {
-        "backgroundColor": "#212121",
         "barStyle": "light-content",
         "hidden": false
       }

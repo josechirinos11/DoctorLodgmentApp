@@ -170,7 +170,7 @@ const Home = () => {
   };
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style="light" backgroundColor={Colors.secondary} />
+      <StatusBar style="light" />
       {/* Menú flotante Iconos */}
       <View style={styles.floatingIconsContainer}>
         {/* Icono de filtro */}

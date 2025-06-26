@@ -88,7 +88,7 @@ const UserProfile = () => {
   ];
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" translucent={false} />
+      <StatusBar style="dark" />
       
       {/* Header */}
       <View style={styles.header}>

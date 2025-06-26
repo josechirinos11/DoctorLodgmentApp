@@ -71,7 +71,7 @@ const EditProfile = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style="light" backgroundColor={Colors.secondary} />
+      <StatusBar style="light" />
       
       {/* Header */}
       <View style={styles.header}>
