@@ -19,7 +19,7 @@ import { useAuth } from '../context/AuthContext';
 
 const EditProfile: React.FC = () => {
   const insets = useSafeAreaInsets();
-  const { user } = useAuth();
+  const { user, updateUserProfile } = useAuth();
 
   const [formData, setFormData] = useState({
     name: user?.name || '',
@@ -55,10 +55,16 @@ const EditProfile: React.FC = () => {
         { text: 'Cancelar', style: 'cancel' },
         { 
           text: 'Guardar', 
-          onPress: () => {
-            // Aquí iría la lógica para guardar los datos
-            Alert.alert('Éxito', 'Datos actualizados correctamente');
-            router.back();
+          onPress: async () => {
+            try {
+              // El email no se cambia desde aquí (el backend lo ignora).
+              const { email, ...datos } = formData;
+              await updateUserProfile(datos);
+              Alert.alert('Éxito', 'Datos actualizados correctamente');
+              router.back();
+            } catch (error) {
+              Alert.alert('Error', 'No se pudieron guardar los cambios. Inténtalo de nuevo.');
+            }
           }
         }
       ]

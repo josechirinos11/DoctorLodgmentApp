@@ -197,7 +197,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(true);
       if (user) {
         const formData = new FormData();
-        formData.append('profileImage', {
+        formData.append('file', {
           uri: imageUri,
           type: 'image/jpeg',
           name: 'profile.jpg',
