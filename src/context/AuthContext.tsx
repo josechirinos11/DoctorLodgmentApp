@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
 // URL base del API - usando IP local para que funcione en dispositivos móviles
-const API_URL = 'http://192.168.1.133:3000';
+const API_URL = 'https://api.doctorlodgment.com';
 const REQUEST_TIMEOUT = 5000;
 
 // Definir tipos

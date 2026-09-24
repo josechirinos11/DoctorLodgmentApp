@@ -3,7 +3,7 @@ import { API_BASE_URL, API_TIMEOUT } from '@env';
 // Configuración central de la API
 export const CONFIG = {
   API: {
-    BASE_URL: API_BASE_URL || 'http://192.168.1.133:3001',
+    BASE_URL: API_BASE_URL || 'https://api.doctorlodgment.com',
     TIMEOUT: parseInt(API_TIMEOUT) || 5000,    ENDPOINTS: {
       // Auth endpoints (según tu backend)
       LOGIN: '/auth/login',
