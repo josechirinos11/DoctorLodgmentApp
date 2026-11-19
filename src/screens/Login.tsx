@@ -7,6 +7,7 @@ import {
   Image,
   Keyboard,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   ScrollView,
   StyleSheet,
@@ -18,6 +19,8 @@ import {
 import Logo from "../components/Logo";
 import Colors from "../constants/Colors";
 import { useAuth } from "../context/AuthContext"; // Volviendo al original
+
+const RECUPERAR_URL = "https://app.doctorlodgment.com/recuperar";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -148,9 +151,13 @@ const Login = () => {
               <TouchableOpacity
                 style={styles.forgotPassword}
                 onPress={() =>
-                  Alert.alert(
-                    "Recuperar contraseña",
-                    "Función disponible próximamente"
+                  // La recuperación (IMP-06) se hace en la web: el enlace del correo
+                  // abre app.doctorlodgment.com/restablecer.
+                  Linking.openURL(RECUPERAR_URL).catch(() =>
+                    Alert.alert(
+                      "Recuperar contraseña",
+                      `Abre ${RECUPERAR_URL} en el navegador.`
+                    )
                   )
                 }
               >
