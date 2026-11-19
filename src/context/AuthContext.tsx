@@ -1,13 +1,20 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
 import { router } from 'expo-router';
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import {
+  alInvalidarSesion,
+  almacenToken,
+  anularEnServidor,
+  api,
+  describirError,
+  esSesionInvalida,
+} from '../services/sesion';
 
-// URL base del API - usando IP local para que funcione en dispositivos móviles
-const API_URL = 'https://api.doctorlodgment.com';
-const REQUEST_TIMEOUT = 5000;
+// Sesión de la app. El token se guarda cifrado (ver services/sesion.ts) y el usuario solo
+// en memoria: se pide siempre a /auth/profile. El token no lleva datos personales.
+//
+// Regla de los logs: nunca el objeto de error de axios (lleva la contraseña del login y
+// el token en las cabeceras), nunca el token, nunca el email. Solo `describirError`.
 
-// Definir tipos
 type User = {
   _id: string;
   email: string;
@@ -44,154 +51,113 @@ type RegisterData = {
   phone?: string;
 };
 
-// Crear el contexto
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Proveedor del contexto
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Comprobar el token al iniciar
+  // Olvida la sesión en este dispositivo (el token ya se borró o se borra aquí).
+  const olvidarSesion = useCallback(async () => {
+    await almacenToken.borrar().catch(() => {});
+    setUser(null);
+    setIsAuthenticated(false);
+  }, []);
+
+  // Un 401 de sesión inválida en cualquier petición (token caducado, sesión cerrada en
+  // otro sitio o contraseña restablecida) devuelve al login.
   useEffect(() => {
-    const loadUser = async () => {
-      console.log('AuthContext: Iniciando carga de usuario...');
+    alInvalidarSesion(() => {
+      setUser(null);
+      setIsAuthenticated(false);
+      router.replace('/login');
+    });
+  }, []);
+
+  // Al arrancar: si hay token guardado, se comprueba con el servidor.
+  useEffect(() => {
+    const cargar = async () => {
       try {
-        const token = await AsyncStorage.getItem('token');
-        console.log('AuthContext: Token encontrado:', token ? 'Sí' : 'No');
-        
-        if (token) {
-          // Configurar axios con el token
-          axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-          
-          // Obtener perfil del usuario
-          const response = await Promise.race([
-            axios.get(`${API_URL}/auth/profile`),
-            new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('Timeout')), REQUEST_TIMEOUT)
-            )
-          ]) as any;
-          
-          setUser(response.data);
-          setIsAuthenticated(true);
-          console.log('AuthContext: Usuario cargado exitosamente');
-        }
-      } catch (error: any) {
-        console.log('AuthContext: Error cargando usuario:', error?.message || 'Error desconocido');
-        // Si hay algún error, eliminar el token
-        await AsyncStorage.removeItem('token');
-        axios.defaults.headers.common['Authorization'] = '';
+        const token = await almacenToken.leer();
+        if (!token) return;
+        const { data } = await api.get<User>('/auth/profile');
+        setUser(data);
+        setIsAuthenticated(true);
+      } catch (error) {
+        // Sesión inválida → se borra. Sin conexión → se conserva para el próximo arranque,
+        // pero no se entra con un token que no se ha podido comprobar.
+        if (esSesionInvalida(error)) await olvidarSesion();
+        console.log('Sesión: no se pudo restaurar:', describirError(error));
       } finally {
-        console.log('AuthContext: Finalizando carga, isLoading = false');
         setIsLoading(false);
       }
     };
+    cargar();
+  }, [olvidarSesion]);
 
-    loadUser();
-  }, []);
+  const entrarCon = async (token: string, perfil?: User) => {
+    await almacenToken.guardar(token);
+    const datos = perfil ?? (await api.get<User>('/auth/profile')).data;
+    setUser(datos);
+    setIsAuthenticated(true);
+    router.replace('/home');
+  };
 
-  // Función de login
   const login = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      console.log(`Intentando login en: ${API_URL}/auth/login`);
-      
-      // Hacer login y obtener token
-      const loginResponse = await axios.post(`${API_URL}/auth/login`, { email, password });
-      const { token } = loginResponse.data;
-      
-      // Guardar el token
-      await AsyncStorage.setItem('token', token);
-      
-      // Configurar axios para futuras peticiones
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      
-      // Obtener perfil del usuario con el token
-      const profileResponse = await axios.get(`${API_URL}/auth/profile`);
-      const userData = profileResponse.data;
-        setUser(userData);
-      setIsAuthenticated(true);
-      console.log('Login exitoso - Usuario autenticado:', userData.email);
-      
-      // Navegar directamente al home después del login exitoso
-      console.log('Navegando a /home...');
-      router.replace('/home');
+      const { data } = await api.post<{ token: string }>('/auth/login', { email, password });
+      await entrarCon(data.token);
     } catch (error) {
-      console.error('Error al iniciar sesión:', error);
+      console.log('Login fallido:', describirError(error));
       throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Función de registro
   const register = async (userData: RegisterData) => {
     try {
       setIsLoading(true);
-      console.log(`Intentando registro en: ${API_URL}/auth/register`);
-      
-      // Registrar usuario y obtener respuesta con token y usuario
-      const response = await axios.post(`${API_URL}/auth/register`, userData);
-      console.log('Respuesta de registro:', response.data);
-      
-      const { user: registeredUser, token } = response.data;
-      
-      // Guardar el token
-      await AsyncStorage.setItem('token', token);
-      
-      // Configurar axios para futuras peticiones
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;      // Establecer usuario y estado de autenticación
-      setUser(registeredUser);
-      setIsAuthenticated(true);
-      
-      console.log('Registro exitoso - Usuario autenticado:', registeredUser.email);
-      console.log('Token guardado - Redirigiendo automáticamente');
-      console.log('Estado final: isAuthenticated =', true, 'isLoading =', false);
-      
-      // Navegar directamente al home después del registro exitoso
-      console.log('Navegando a /home...');
-      router.replace('/home');
+      const { data } = await api.post<{ token: string; user: User }>('/auth/register', userData);
+      await entrarCon(data.token, data.user);
     } catch (error) {
-      console.error('Error al registrarse:', error);
+      console.log('Registro fallido:', describirError(error));
       throw error;
     } finally {
       setIsLoading(false);
     }
   };
-  // Función de logout
+
+  // Cerrar sesión: primero se borra todo en el dispositivo (aunque no haya conexión, la
+  // sesión se acaba aquí) y luego se anula el token en el servidor por si alguien lo
+  // hubiera copiado.
   const logout = async () => {
-    try {
-      setIsLoading(true);
-      await AsyncStorage.removeItem('token');
-      axios.defaults.headers.common['Authorization'] = '';
-      setUser(null);
-      setIsAuthenticated(false);
-      console.log('Logout exitoso');
-    } catch (error) {
-      console.error('Error al cerrar sesión:', error);
-    } finally {
-      setIsLoading(false);
+    setIsLoading(true);
+    const token = await almacenToken.leer().catch(() => null);
+    await olvidarSesion();
+    setIsLoading(false);
+    if (token) {
+      anularEnServidor(token).catch((error) => console.log('Logout en servidor:', describirError(error)));
     }
   };
 
-  // Función para actualizar el perfil del usuario
   const updateUserProfile = async (userData: Partial<User>) => {
     try {
       setIsLoading(true);
       if (user) {
-        const response = await axios.put(`${API_URL}/users/${user._id}`, userData);
-        setUser(response.data);
+        const { data } = await api.put<User>(`/users/${user._id}`, userData);
+        setUser(data);
       }
     } catch (error) {
-      console.error('Error al actualizar perfil:', error);
+      console.log('Error al actualizar perfil:', describirError(error));
       throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Función para actualizar la imagen de perfil
   const updateProfileImage = async (imageUri: string) => {
     try {
       setIsLoading(true);
@@ -203,20 +169,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           name: 'profile.jpg',
         } as any);
 
-        const response = await axios.post(
-          `${API_URL}/users/${user._id}/profile-image`,
-          formData,
-          {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-          }
-        );
+        const { data } = await api.post(`/users/${user._id}/profile-image`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
 
-        setUser(prev => prev ? { ...prev, profileImage: response.data.profileImage } : null);
+        setUser((prev) => (prev ? { ...prev, profileImage: data.profileImage } : null));
       }
     } catch (error) {
-      console.error('Error al actualizar imagen de perfil:', error);
+      console.log('Error al actualizar imagen de perfil:', describirError(error));
       throw error;
     } finally {
       setIsLoading(false);
@@ -231,13 +191,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     register,
     logout,
     updateUserProfile,
-    updateProfileImage
+    updateProfileImage,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-// Hook personalizado para usar el contexto
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
